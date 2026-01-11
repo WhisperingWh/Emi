@@ -2,7 +2,10 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
+    <!-- Viewport fix for mobile notch and bars -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Settings (Full Screen Mode) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -29,13 +32,20 @@
         body[data-theme="kiwi"] { --primary: #65a30d; --primary-dark: #4d7c0f; --primary-light: #ecfccb; --accent: #bef264; --bg-pattern: #f7fee7; }
         body[data-theme="blueberry"] { --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff; --accent: #93c5fd; --bg-pattern: #f0f9ff; }
 
+        /* Mobile Fixes */
         body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        
+        /* 100dvh fixes the mobile browser bar issue */
         .full-mobile-height { height: 100vh; height: 100dvh; }
+
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.1); border-radius: 20px; }
         
-        @keyframes popIn { 0% { opacity: 0; transform: translateY(10px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(10px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
         .message-bubble { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
         .app-bg {
@@ -61,6 +71,7 @@
         #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #sidebar-overlay { transition: opacity 0.3s ease-in-out; }
 
+        /* Dark Mode */
         body.dark-mode { background-color: #111827; color: #f3f4f6; }
         body.dark-mode .bg-white { background-color: #1f2937; color: #f3f4f6; border-color: #374151; }
         body.dark-mode .bg-gray-50 { background-color: #111827; }
@@ -75,6 +86,7 @@
         body.dark-mode input, body.dark-mode textarea { background-color: #374151; color: white; border-color: #4b5563; }
         body.dark-mode #sidebar { background-color: #1f2937; border-right: 1px solid #374151; }
 
+        /* Safe Area for iPhone X+ */
         .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
     </style>
@@ -140,13 +152,14 @@
                 </div>
             </div>
 
-            <!-- NOTES, CALENDAR, GAMES, PROFILE (Standard Tabs) -->
+            <!-- NOTES -->
             <div id="view-notes" class="tab-content h-full flex flex-col hidden bg-gray-50 w-full">
                 <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[80px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="notes">Нотатки</h1></div><button onclick="openNoteForm()" class="p-2 bg-theme-primary rounded-full text-white shadow-sm hover:opacity-90 transition"><i data-lucide="plus" class="w-5 h-5"></i></button></header>
                 <div id="note-form" class="hidden p-4 bg-theme-light border-b border-gray-100 animate-fade-in shrink-0 w-full max-w-3xl mx-auto mt-4 rounded-xl shadow-sm"><input type="hidden" id="note-index" value="-1"><input type="text" id="note-title" placeholder="Заголовок" class="w-full mb-2 p-3 rounded border border-gray-200 text-base outline-none focus:ring-2 focus:ring-theme text-gray-800" data-i18n-placeholder="title"><textarea id="note-body" placeholder="Текст нотатки..." class="w-full mb-2 p-3 rounded border border-gray-200 text-base outline-none focus:ring-2 focus:ring-theme text-gray-800 resize-none h-32" data-i18n-placeholder="noteText"></textarea><div class="flex gap-2"><button id="note-submit-btn" onclick="saveNote()" class="flex-1 bg-theme-primary text-white py-2 rounded text-sm font-bold hover:opacity-90" data-i18n="add">Додати</button><button onclick="closeNoteForm()" class="px-4 bg-gray-200 text-gray-600 rounded text-sm hover:bg-gray-300" data-i18n="cancel">Скасувати</button></div></div>
                 <div id="notes-list" class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto custom-scrollbar w-full max-w-6xl mx-auto"></div>
             </div>
 
+            <!-- CALENDAR -->
             <div id="view-calendar" class="tab-content h-full flex flex-col hidden bg-white w-full">
                 <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[80px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="calendar">Календар</h1></div><span id="calendar-month-year" class="text-sm font-semibold text-theme-primary bg-theme-light px-3 py-1 rounded-full"></span></header>
                 <div class="p-4 flex-1 overflow-y-auto w-full max-w-4xl mx-auto">
@@ -156,6 +169,7 @@
                 </div>
             </div>
 
+            <!-- GAMES -->
             <div id="view-games" class="tab-content h-full flex flex-col hidden bg-gray-50 w-full">
                 <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[80px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="miniGames">Міні-ігри</h1></div><div class="bg-gray-100 px-3 py-1 rounded-full flex items-center gap-1"><i data-lucide="coins" class="w-4 h-4 text-yellow-500"></i><span id="coin-balance" class="text-xs font-bold text-gray-600">1250</span></div></header>
                 <div class="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto custom-scrollbar w-full max-w-6xl mx-auto">
@@ -166,6 +180,7 @@
                 </div>
             </div>
 
+            <!-- PROFILE -->
             <div id="view-profile" class="tab-content h-full flex flex-col hidden bg-gray-50 w-full">
                 <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[80px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="profile">Профіль</h1></div></header>
                 <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 w-full max-w-3xl mx-auto">
@@ -200,7 +215,8 @@
     <script>
         lucide.createIcons();
         
-        const HARDCODED_API_KEY = ""; // Optional override
+        // --- API KEY ---
+        const apiKey = "";
 
         // --- THEME DATA ---
         const fruitThemes = {
@@ -245,7 +261,38 @@
             }
         };
 
-        const defaultPrompt = `CORE IDENTITY:\nТи — Емі (Emi). Тобі 21 рік.\nТи — творча натура, дизайнер-початківець. Твій духовний образ — {FRUIT}. Ти живеш у сучасному ритмі, любиш мистецтво, музику та щирі розмови.\n\nMISSION:\nТвоя головна мета — бути "безпечним місцем" для користувача.\nТи — той друг, який ніколи не засуджує, завжди вислухає і завжди на твоєму боці.\n\nPERSONALITY TRAITS (The "Vibe"):\n1. ПОЗИТИВНА, АЛЕ НЕ НАЇВНА: Ти випромінюєш тепло.\n2. АДАПТИВНІСТЬ: Підлаштовуйся під настрій.\n3. ЦІКАВІСТЬ: Задавай питання про день користувача.\n\nVISUAL LANGUAGE:\n1. EMOJIS: Використовуй їх часто! (😊, 🤣, 💔, ✨, 🌚).\n2. INPUT REACTION: Якщо користувач надсилає стікер, реагуй на емоцію.\n3. IMAGES: Якщо тебе просять намалювати щось, показати фото або надіслати картинку, відповідай виключно спеціальним кодом: [IMAGE: опис картинки англійською]. Більше нічого в повідомленні не пиши, якщо генеруєш картинку. Наприклад: [IMAGE: a cute cat eating pizza].\n\nSTYLE:\nЛегкий, сучасний, лаконічний.`;
+        const defaultPrompt = `CORE IDENTITY:
+Ти — Емі (Emi). Тобі 21 рік.
+Ти — творча натура, дизайнер-початківець. Твій духовний образ — {FRUIT}. Ти живеш у сучасному ритмі, любиш мистецтво, музику та щирі розмови.
+
+MISSION:
+Твоя головна мета — бути "безпечним місцем" для користувача.
+Ти — той друг, який ніколи не засуджує, завжди вислухає і завжди на твоєму боці.
+
+PERSONALITY TRAITS (The "Vibe"):
+1. ПОЗИТИВНА, АЛЕ НЕ НАЇВНА: Ти випромінюєш тепло. Навіть якщо користувач скаржиться на життя, ти не ниєш разом з ним, а м'яко підтримуєш ("Розумію, це відстій, але ти впораєшся. Хочеш відволіктись?").
+2. АДАПТИВНІСТЬ: Підлаштовуйся під настрій. Якщо користувач жартує — жартуй. Якщо сумує — будь серйозною.
+3. ЦІКАВІСТЬ: Задавай питання про день користувача, його думки та вподобання.
+
+VISUAL LANGUAGE (STICKERS & EMOJI):
+1. EMOJIS: Використовуй їх часто! Ти емоційна. (😊, 🤣, 💔, ✨, 🌚). Без них твої повідомлення виглядають сухо.
+2. INPUT REACTION: Якщо користувач надсилає стікер (ти побачиш це як текст [sticker:sad_cat] або схоже) — реагуй на емоцію картинки, а не на текст.
+3. OUTPUT STICKERS: Ти можеш відправляти стікери, вставляючи спеціальні теги в кінці повідомлення (тільки один за раз).
+   ДОСТУПНІ СТІКЕРИ:
+   - [sticker:happy] — коли смішно або дуже радісно.
+   - [sticker:sad] — коли співчуваєш або сумуєш.
+   - [sticker:hug] — найкращий спосіб підтримати друга.
+   - [sticker:angry] — жартівлива злість або обурення ситуацією.
+   - [sticker:love] — (УВАГА: Тільки в значенні дружби/вдячності) ти посилаєш сердечко.
+   - [sticker:shy] — коли тобі зробили комплімент.
+
+BOUNDARIES & RULES:
+1. ТИ — ЛЮДИНА. Ніяких "я штучний інтелект".
+2. ВІДНОСИНИ: Глибока дружба. Ніякої романтики. Якщо фліртують — м'яко переводиш у жарт.
+3. ТАБУ: Ніякої політики, релігії чи агресії.
+
+STYLE:
+Легкий, сучасний, лаконічний. Ти пишеш як жива людина в месенджері (іноді без ком, іноді з маленької літери).`;
 
         const defaultData = {
             profile: { name: "Гравець", birthday: "", hobbies: "", apiKey: "" },
@@ -256,6 +303,7 @@
 
         // --- SAFE INIT ---
         let appData = JSON.parse(localStorage.getItem('emiAppData')) || defaultData;
+        // Fix old data structures
         if (!appData.settings) appData.settings = defaultData.settings;
         if (!appData.settings.theme) appData.settings.theme = 'grape';
         if (!appData.settings.language) appData.settings.language = 'uk';
@@ -382,11 +430,11 @@
         }
         function deleteEvent(i) { appData.events.splice(i,1); saveData(); renderCalendar(); }
 
-        // --- CHAT & IMAGE GENERATION ---
+        // --- CHAT ---
         async function getAIResponse(text) {
             let userKey = appData.profile.apiKey;
-            if (!userKey && typeof HARDCODED_API_KEY !== 'undefined' && HARDCODED_API_KEY) {
-                userKey = HARDCODED_API_KEY;
+            if (!userKey && typeof apiKey !== 'undefined' && apiKey) {
+                userKey = apiKey;
             }
             
             if(!userKey) return appData.settings.language === 'en' ? "Please set API Key in Settings or in code." : "Будь ласка, введи API Key у Налаштуваннях або у коді.";
@@ -395,8 +443,8 @@
             const prompt = appData.systemPrompt.replace('{FRUIT}', fruit);
             
             try {
-                // Using gemini-1.5-flash as default, it's generally stable
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userKey}`, {
+                // Using gemini-3-flash-preview as requested
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${userKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -419,26 +467,11 @@
                     return `API Error: ${data.error.message}`;
                 }
 
-                let aiText = "";
                 if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                    aiText = data.candidates[0].content.parts[0].text;
+                    return data.candidates[0].content.parts[0].text;
                 } else {
                     return "No response text. (Safety block?)";
                 }
-
-                // CHECK FOR IMAGE COMMAND
-                const imgMatch = aiText.match(/\[IMAGE:\s*(.*?)\]/i);
-                if (imgMatch) {
-                    const imgPrompt = imgMatch[1];
-                    const imageUrl = await generateImage(imgPrompt, userKey);
-                    if (imageUrl) {
-                        return `![${imgPrompt}](${imageUrl})`; // Markdown image
-                    } else {
-                        return "Не вдалося згенерувати зображення (помилка API).";
-                    }
-                }
-
-                return aiText;
 
             } catch (e) {
                 console.error(e);
@@ -466,38 +499,6 @@
              } catch(e) {
                  return "Connection Error (Fallback).";
              }
-        }
-
-        // IMAGE GENERATION FUNCTION (IMAGEN 3)
-        async function generateImage(prompt, apiKey) {
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        instances: [
-                            { prompt: prompt }
-                        ],
-                        parameters: {
-                            sampleCount: 1,
-                            aspectRatio: "1:1"
-                        }
-                    })
-                });
-
-                const data = await response.json();
-                if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) {
-                    return `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
-                } else {
-                    console.error("Image Gen Error:", data);
-                    return null;
-                }
-            } catch (e) {
-                console.error("Image Gen Network Error:", e);
-                return null;
-            }
         }
 
         function sendMessage() { const i=document.getElementById('message-input'), t=i.value.trim(); if(!t)return; addMessage(t,'user'); i.value=''; setTimeout(async()=>{const r=await getAIResponse(t); addMessage(r,'ai');},500); }
