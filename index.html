@@ -429,16 +429,40 @@ STYLE:
 
         // --- CHAT ---
         async function getAIResponse(text) {
-            if(!appData.profile.apiKey) return "API Key missing.";
+            if(!appData.profile.apiKey) return "API Key missing. Please set it in Settings.";
             const fruit = fruitThemes[appData.settings.theme].name;
             const prompt = appData.systemPrompt.replace('{FRUIT}', fruit);
+            
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appData.profile.apiKey}`, {
-                    method:'POST', headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({contents:[{parts:[{text:`${prompt}\nUser:${appData.profile.name}\nMsg:${text}`}]}]})
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `${prompt}\n\nUser Profile: ${appData.profile.name}, ${appData.profile.hobbies}\nUser message: ${text}`
+                            }]
+                        }]
+                    })
                 });
-                const data = await res.json(); return data.candidates?.[0]?.content?.parts?.[0]?.text||"Error";
-            } catch(e) { return "Connection Error"; }
+
+                const data = await res.json();
+
+                if (data.error) {
+                    console.error("API Error:", data.error);
+                    return `API Error: ${data.error.message}`;
+                }
+
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    return "No response text. (Safety block?)";
+                }
+
+            } catch (e) {
+                console.error(e);
+                return "Connection Error. Check internet or API key.";
+            }
         }
         function sendMessage() { const i=document.getElementById('message-input'), t=i.value.trim(); if(!t)return; addMessage(t,'user'); i.value=''; setTimeout(async()=>{const r=await getAIResponse(t); addMessage(r,'ai');},500); }
         function addMessage(t,s) {
