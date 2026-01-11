@@ -3,19 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Meta tags for PWA (Add to Home Screen) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#ef4444"> <!-- Matches header red -->
+    <meta name="theme-color" content="#ffffff">
     <title>Emi AI Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Markdown Parser for AI responses -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        /* Базові стилі */
+        :root {
+            --primary: #9333ea;
+            --primary-dark: #7e22ce;
+            --primary-light: #f3e8ff;
+            --accent: #d8b4fe;
+            --bg-pattern: #faf5ff;
+        }
+
+        body[data-theme="grape"] { --primary: #9333ea; --primary-dark: #7e22ce; --primary-light: #f3e8ff; --accent: #d8b4fe; --bg-pattern: #faf5ff; }
+        body[data-theme="apple"] { --primary: #ef4444; --primary-dark: #dc2626; --primary-light: #fef2f2; --accent: #fca5a5; --bg-pattern: #fff1f2; }
+        body[data-theme="mandarin"] { --primary: #f97316; --primary-dark: #ea580c; --primary-light: #ffedd5; --accent: #fdba74; --bg-pattern: #fff7ed; }
+        body[data-theme="kiwi"] { --primary: #65a30d; --primary-dark: #4d7c0f; --primary-light: #ecfccb; --accent: #bef264; --bg-pattern: #f7fee7; }
+        body[data-theme="blueberry"] { --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff; --accent: #93c5fd; --bg-pattern: #f0f9ff; }
+
         body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
-        
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.1); border-radius: 20px; }
@@ -24,579 +34,253 @@
             0% { opacity: 0; transform: translateY(10px) scale(0.95); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .message-bubble {
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        .message-bubble { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        .app-bg {
+            background-color: var(--bg-pattern);
+            background-image: radial-gradient(var(--primary) 0.5px, transparent 0.5px), radial-gradient(var(--primary) 0.5px, var(--bg-pattern) 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            transition: background-color 0.3s, background-image 0.3s;
+        }
+        body.dark-mode .app-bg {
+            background-color: #111827;
+            background-image: radial-gradient(#374151 0.5px, transparent 0.5px), radial-gradient(#374151 0.5px, #111827 0.5px);
         }
 
-        .chat-bg {
-            background-color: #e5ddd5;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239c92ac' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-
+        .bg-theme-primary { background-color: var(--primary); transition: background-color 0.3s; }
+        .bg-theme-dark { background-color: var(--primary-dark); transition: background-color 0.3s; }
+        .bg-theme-light { background-color: var(--primary-light); transition: background-color 0.3s; }
+        .text-theme-primary { color: var(--primary); transition: color 0.3s; }
+        .text-theme-light { color: var(--primary-light); transition: color 0.3s; }
+        .border-theme-primary { border-color: var(--primary); transition: border-color 0.3s; }
+        
         .tab-content { transition: opacity 0.2s ease-in-out; }
         .tab-content.hidden { display: none; opacity: 0; }
         #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #sidebar-overlay { transition: opacity 0.3s ease-in-out; }
 
-        /* --- DARK MODE STYLES --- */
-        body.dark-mode { background-color: #111827; }
+        body.dark-mode { background-color: #111827; color: #f3f4f6; }
         body.dark-mode .bg-white { background-color: #1f2937; color: #f3f4f6; border-color: #374151; }
         body.dark-mode .bg-gray-50 { background-color: #111827; }
         body.dark-mode .bg-gray-100 { background-color: #374151; }
-        body.dark-mode .bg-yellow-50 { background-color: #422006; border-color: #713f12; }
-        body.dark-mode .bg-blue-50 { background-color: #1e3a8a; border-color: #1e40af; }
-        body.dark-mode .bg-red-50 { background-color: #450a0a; color: #fecaca; }
+        body.dark-mode .bg-theme-light { background-color: #374151; color: #e5e7eb; border-color: #4b5563; }
         body.dark-mode .text-gray-800 { color: #f9fafb; }
         body.dark-mode .text-gray-700 { color: #e5e7eb; }
         body.dark-mode .text-gray-600 { color: #d1d5db; }
         body.dark-mode .text-gray-500 { color: #9ca3af; }
-        body.dark-mode .text-gray-400 { color: #9ca3af; }
         body.dark-mode .border-gray-100 { border-color: #374151; }
         body.dark-mode .border-gray-200 { border-color: #4b5563; }
-        body.dark-mode .border-red-100 { border-color: #7f1d1d; }
-        body.dark-mode .chat-bg { background-color: #0f172a; filter: invert(0.05); }
-        body.dark-mode input, body.dark-mode textarea { 
-            background-color: #374151; 
-            color: white; 
-            border-color: #4b5563; 
-        }
-        body.dark-mode .hover\:bg-gray-100:hover { background-color: #374151; }
+        body.dark-mode input, body.dark-mode textarea { background-color: #374151; color: white; border-color: #4b5563; }
         body.dark-mode #sidebar { background-color: #1f2937; border-right: 1px solid #374151; }
+
+        .memory-card { transform-style: preserve-3d; transition: transform 0.5s; }
+        .memory-card.flipped { transform: rotateY(180deg); }
+        .memory-front, .memory-back { backface-visibility: hidden; }
+        .memory-back { transform: rotateY(180deg); }
+        .mine-cell:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="bg-gray-50 h-screen w-screen overflow-hidden font-sans">
+<body class="bg-gray-50 h-screen w-screen overflow-hidden font-sans text-gray-800" data-theme="grape">
 
-    <!-- App Container (Full Screen) -->
     <div class="relative w-full h-full flex flex-col bg-white transition-colors duration-300">
-        
-        <!-- === SIDEBAR DRAWER === -->
+        <!-- SIDEBAR -->
         <div id="sidebar-overlay" onclick="toggleSidebar()" class="absolute inset-0 bg-black/50 z-40 hidden opacity-0"></div>
-
         <aside id="sidebar" class="absolute top-0 left-0 bottom-0 w-[300px] bg-white z-50 transform -translate-x-full shadow-2xl flex flex-col transition-colors duration-300 h-full">
-            <!-- Sidebar Header -->
-            <div class="h-[160px] bg-red-500 p-5 flex flex-col justify-end text-white relative overflow-hidden shrink-0">
+            <div class="h-[160px] bg-theme-primary p-5 flex flex-col justify-end text-white relative overflow-hidden shrink-0">
                 <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full"></div>
                 <div class="absolute top-10 right-10 w-10 h-10 bg-white/10 rounded-full"></div>
                 <div class="w-16 h-16 bg-white rounded-full mb-3 flex items-center justify-center text-3xl shadow-sm border-2 border-white/30 cursor-pointer hover:scale-105 transition overflow-hidden text-gray-800" onclick="switchTab('profile')">👤</div>
                 <div id="sidebar-username" class="font-bold text-lg leading-none">Користувач</div>
-                <div class="text-sm text-red-100 mt-1 opacity-80" data-i18n="playerTitle">Гравець</div>
+                <div class="text-sm text-white/80 mt-1" data-i18n="playerTitle">Гравець</div>
             </div>
-            
-            <!-- Sidebar Menu Items -->
             <nav class="flex-1 overflow-y-auto py-2">
-                <button onclick="switchTab('profile')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition">
-                    <i data-lucide="user" class="w-5 h-5 text-gray-500"></i>
-                    <span class="font-medium" data-i18n="myProfile">Мій Профіль</span>
-                </button>
+                <button onclick="switchTab('profile')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition"><i data-lucide="user" class="w-5 h-5 text-gray-500"></i><span class="font-medium" data-i18n="myProfile">Мій Профіль</span></button>
                 <div class="border-b border-gray-100 my-1"></div>
-                <button onclick="switchTab('chat')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition">
-                    <i data-lucide="message-circle" class="w-5 h-5 text-gray-500"></i>
-                    <div class="flex-1 text-left font-medium" data-i18n="chatWithEmi">Чат з Emi</div>
-                    <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full">1</span>
-                </button>
-                <button onclick="switchTab('notes')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition">
-                    <i data-lucide="sticky-note" class="w-5 h-5 text-gray-500"></i>
-                    <span class="font-medium" data-i18n="notes">Нотатки</span>
-                </button>
-                <button onclick="switchTab('calendar')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition">
-                    <i data-lucide="calendar" class="w-5 h-5 text-gray-500"></i>
-                    <span class="font-medium" data-i18n="calendar">Календар</span>
-                </button>
-                <button onclick="switchTab('games')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition">
-                    <i data-lucide="gamepad-2" class="w-5 h-5 text-gray-500"></i>
-                    <span class="font-medium" data-i18n="games">Ігри</span>
-                </button>
+                <button onclick="switchTab('chat')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition"><i data-lucide="message-circle" class="w-5 h-5 text-gray-500"></i><div class="flex-1 text-left font-medium" data-i18n="chatWithEmi">Чат з Emi</div><span class="bg-theme-primary text-white text-[10px] font-bold px-1.5 rounded-full">1</span></button>
+                <button onclick="switchTab('notes')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition"><i data-lucide="sticky-note" class="w-5 h-5 text-gray-500"></i><span class="font-medium" data-i18n="notes">Нотатки</span></button>
+                <button onclick="switchTab('calendar')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition"><i data-lucide="calendar" class="w-5 h-5 text-gray-500"></i><span class="font-medium" data-i18n="calendar">Календар</span></button>
+                <button onclick="switchTab('games')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition"><i data-lucide="gamepad-2" class="w-5 h-5 text-gray-500"></i><span class="font-medium" data-i18n="games">Ігри</span></button>
                 <div class="border-b border-gray-100 my-1"></div>
-                <button onclick="switchTab('profile')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition">
-                    <i data-lucide="settings" class="w-5 h-5 text-gray-500"></i>
-                    <span class="font-medium" data-i18n="settings">Налаштування</span>
-                </button>
+                <button onclick="switchTab('settings')" class="w-full flex items-center gap-4 px-5 py-3 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition"><i data-lucide="settings" class="w-5 h-5 text-gray-500"></i><span class="font-medium" data-i18n="settings">Налаштування</span></button>
             </nav>
         </aside>
 
-        <!-- === MAIN CONTENT AREA === -->
+        <!-- CONTENT -->
         <div class="flex-1 overflow-hidden relative bg-white transition-colors duration-300 w-full h-full flex flex-col">
-
-            <!-- TAB 1: CHAT -->
+            <!-- CHAT -->
             <div id="view-chat" class="tab-content h-full flex flex-col w-full">
-                <!-- Header -->
-                <header class="bg-red-500 text-white p-4 pt-safe flex items-center justify-between shadow-md z-10 shrink-0 h-[60px] md:h-[70px]">
-                    <div class="flex items-center gap-4">
-                        <button onclick="toggleSidebar()" class="p-1 hover:bg-red-400 rounded-full transition active:scale-95">
-                            <i data-lucide="menu" class="w-6 h-6"></i>
-                        </button>
-                        <div class="flex items-center gap-3">
-                            <div class="relative">
-                                <div class="w-10 h-10 rounded-full bg-red-100 border-2 border-red-200 overflow-hidden flex items-center justify-center">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/415/415733.png" alt="Emi Avatar" class="w-8 h-8 object-contain">
-                                </div>
-                                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-red-500 rounded-full"></div>
-                            </div>
-                            <div class="flex flex-col">
-                                <h1 class="font-bold text-lg leading-none">Emi</h1>
-                                <p class="text-xs text-red-100 mt-0.5">Online</p>
-                            </div>
-                        </div>
-                    </div>
-                    <button onclick="startVideoCall()" class="p-2 bg-red-400 hover:bg-red-300 rounded-full transition shadow-sm active:scale-95 group">
-                        <i data-lucide="video" class="w-5 h-5 group-hover:text-white"></i>
-                    </button>
+                <header class="bg-theme-primary text-white p-4 pt-safe flex items-center justify-between shadow-md z-10 shrink-0 h-[60px] md:h-[70px]">
+                    <div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-1 hover:bg-white/20 rounded-full transition active:scale-95"><i data-lucide="menu" class="w-6 h-6"></i></button><div class="flex items-center gap-3"><div class="relative"><div class="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 overflow-hidden flex items-center justify-center text-2xl emi-avatar-slot">🍇</div><div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div></div><div class="flex flex-col"><h1 class="font-bold text-lg leading-none">Emi</h1><p class="text-xs text-white/80 mt-0.5">Online</p></div></div></div>
+                    <button onclick="startVideoCall()" class="p-2 hover:bg-white/20 rounded-full transition shadow-sm active:scale-95 group"><i data-lucide="video" class="w-5 h-5"></i></button>
                 </header>
-
-                <main id="chat-content" class="flex-1 chat-bg overflow-y-auto custom-scrollbar p-4 flex flex-col gap-3 w-full max-w-5xl mx-auto">
-                    <div class="flex justify-center my-2 opacity-60">
-                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide shadow-sm" data-i18n="today">Сьогодні</span>
-                    </div>
-                    <!-- Intro Message -->
-                    <div class="message-bubble self-start max-w-[85%] md:max-w-[60%] flex gap-2">
-                        <div class="bg-white text-gray-800 rounded-2xl rounded-tl-none py-3 px-4 shadow-sm border border-gray-100">
-                            <p class="text-sm md:text-base leading-relaxed" data-i18n="welcomeMessage">Привіт! Я Emi 🍎. Спочатку налаштуй свій API ключ у профілі, щоб я могла говорити!</p>
-                            <span class="text-[10px] text-gray-400 block text-right mt-1">10:00</span>
-                        </div>
-                    </div>
+                <main id="chat-content" class="flex-1 app-bg overflow-y-auto custom-scrollbar p-4 flex flex-col gap-3 w-full max-w-5xl mx-auto">
+                    <div class="flex justify-center my-2 opacity-60"><span class="bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide shadow-sm" data-i18n="today">Сьогодні</span></div>
+                    <div class="message-bubble self-start max-w-[85%] md:max-w-[60%] flex gap-2"><div class="bg-white text-gray-800 rounded-2xl rounded-tl-none py-3 px-4 shadow-sm border border-gray-100"><p class="text-sm md:text-base leading-relaxed" data-i18n="welcomeMessage">Привіт! Я Emi. Обирай свою тему та налаштовуй мене!</p><span class="text-[10px] text-gray-400 block text-right mt-1">10:00</span></div></div>
                 </main>
-
-                <!-- Input Area -->
-                <div class="bg-white p-3 border-t border-gray-100 shrink-0 flex items-center gap-2 z-10 w-full justify-center">
-                    <div class="w-full max-w-5xl flex items-center gap-2">
-                        <button class="p-2 text-gray-400 hover:text-red-500 transition">
-                            <i data-lucide="plus" class="w-6 h-6"></i>
-                        </button>
-                        <div class="flex-1 bg-gray-100 rounded-full px-4 py-3 flex items-center">
-                            <input type="text" id="message-input" placeholder="Напишіть повідомлення..." 
-                                class="w-full bg-transparent outline-none text-base text-gray-800 placeholder-gray-400"
-                                autocomplete="off" onkeypress="handleKeyPress(event)" data-i18n-placeholder="writeMessage">
-                        </div>
-                        <button onclick="sendMessage()" class="p-3 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition active:scale-95 flex items-center justify-center">
-                            <i data-lucide="send" class="w-5 h-5 ml-0.5"></i>
-                        </button>
-                    </div>
-                </div>
+                <div class="bg-white p-3 border-t border-gray-100 shrink-0 flex items-center gap-2 z-10 w-full justify-center"><div class="w-full max-w-5xl flex items-center gap-2"><button class="p-2 text-gray-400 hover:text-theme-primary transition"><i data-lucide="plus" class="w-6 h-6"></i></button><div class="flex-1 bg-gray-100 rounded-full px-4 py-3 flex items-center"><input type="text" id="message-input" placeholder="Напишіть повідомлення..." class="w-full bg-transparent outline-none text-base text-gray-800 placeholder-gray-400" autocomplete="off" onkeypress="handleKeyPress(event)" data-i18n-placeholder="writeMessage"></div><button onclick="sendMessage()" class="p-3 bg-theme-primary hover:bg-theme-dark text-white rounded-full shadow-md transition active:scale-95 flex items-center justify-center"><i data-lucide="send" class="w-5 h-5 ml-0.5"></i></button></div></div>
             </div>
 
-            <!-- TAB 2: NOTES -->
+            <!-- NOTES -->
             <div id="view-notes" class="tab-content h-full flex flex-col hidden bg-gray-50 w-full">
-                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0">
-                    <div class="flex items-center gap-4">
-                        <button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
-                            <i data-lucide="menu" class="w-6 h-6"></i>
-                        </button>
-                        <h1 class="font-bold text-2xl text-gray-800" data-i18n="notes">Нотатки</h1>
-                    </div>
-                    <button onclick="openNoteForm()" class="p-2 bg-yellow-400 rounded-full text-white shadow-sm hover:bg-yellow-500 transition">
-                        <i data-lucide="plus" class="w-5 h-5"></i>
-                    </button>
-                </header>
-                
-                <div id="note-form" class="hidden p-4 bg-yellow-50 border-b border-yellow-100 animate-fade-in shrink-0 w-full max-w-3xl mx-auto mt-4 rounded-xl shadow-sm">
-                    <input type="hidden" id="note-index" value="-1">
-                    <input type="text" id="note-title" placeholder="Заголовок" class="w-full mb-2 p-3 rounded border border-yellow-200 text-base outline-none focus:border-yellow-400 text-gray-800" data-i18n-placeholder="title">
-                    <textarea id="note-body" placeholder="Текст нотатки..." class="w-full mb-2 p-3 rounded border border-yellow-200 text-base outline-none focus:border-yellow-400 text-gray-800 resize-none h-32" data-i18n-placeholder="noteText"></textarea>
-                    <div class="flex gap-2">
-                        <button id="note-submit-btn" onclick="saveNote()" class="flex-1 bg-yellow-400 text-white py-2 rounded text-sm font-bold hover:bg-yellow-500" data-i18n="add">Додати</button>
-                        <button onclick="closeNoteForm()" class="px-4 bg-gray-200 text-gray-600 rounded text-sm hover:bg-gray-300" data-i18n="cancel">Скасувати</button>
-                    </div>
-                </div>
-
+                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="notes">Нотатки</h1></div><button onclick="openNoteForm()" class="p-2 bg-theme-primary rounded-full text-white shadow-sm hover:opacity-90 transition"><i data-lucide="plus" class="w-5 h-5"></i></button></header>
+                <div id="note-form" class="hidden p-4 bg-theme-light border-b border-gray-100 animate-fade-in shrink-0 w-full max-w-3xl mx-auto mt-4 rounded-xl shadow-sm"><input type="hidden" id="note-index" value="-1"><input type="text" id="note-title" placeholder="Заголовок" class="w-full mb-2 p-3 rounded border border-gray-200 text-base outline-none focus:ring-2 focus:ring-theme text-gray-800" data-i18n-placeholder="title"><textarea id="note-body" placeholder="Текст нотатки..." class="w-full mb-2 p-3 rounded border border-gray-200 text-base outline-none focus:ring-2 focus:ring-theme text-gray-800 resize-none h-32" data-i18n-placeholder="noteText"></textarea><div class="flex gap-2"><button id="note-submit-btn" onclick="saveNote()" class="flex-1 bg-theme-primary text-white py-2 rounded text-sm font-bold hover:opacity-90" data-i18n="add">Додати</button><button onclick="closeNoteForm()" class="px-4 bg-gray-200 text-gray-600 rounded text-sm hover:bg-gray-300" data-i18n="cancel">Скасувати</button></div></div>
                 <div id="notes-list" class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto custom-scrollbar w-full max-w-6xl mx-auto"></div>
             </div>
 
-            <!-- TAB 3: CALENDAR -->
+            <!-- CALENDAR -->
             <div id="view-calendar" class="tab-content h-full flex flex-col hidden bg-white w-full">
-                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0">
-                    <div class="flex items-center gap-4">
-                        <button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
-                            <i data-lucide="menu" class="w-6 h-6"></i>
-                        </button>
-                        <h1 class="font-bold text-2xl text-gray-800" data-i18n="calendar">Календар</h1>
-                    </div>
-                    <span id="calendar-month-year" class="text-sm font-semibold text-red-500 bg-red-50 px-3 py-1 rounded-full"></span>
-                </header>
+                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="calendar">Календар</h1></div><span id="calendar-month-year" class="text-sm font-semibold text-theme-primary bg-theme-light px-3 py-1 rounded-full"></span></header>
                 <div class="p-4 flex-1 overflow-y-auto w-full max-w-4xl mx-auto">
-                    <div class="grid grid-cols-7 mb-2 text-center">
-                        <span class="text-xs font-bold text-gray-400" data-i18n="mon">Пн</span>
-                        <span class="text-xs font-bold text-gray-400" data-i18n="tue">Вт</span>
-                        <span class="text-xs font-bold text-gray-400" data-i18n="wed">Ср</span>
-                        <span class="text-xs font-bold text-gray-400" data-i18n="thu">Чт</span>
-                        <span class="text-xs font-bold text-gray-400" data-i18n="fri">Пт</span>
-                        <span class="text-xs font-bold text-gray-400 text-red-400" data-i18n="sat">Сб</span>
-                        <span class="text-xs font-bold text-gray-400 text-red-400" data-i18n="sun">Нд</span>
-                    </div>
+                    <div class="grid grid-cols-7 mb-2 text-center"><span class="text-xs font-bold text-gray-400" data-i18n="mon">Пн</span><span class="text-xs font-bold text-gray-400" data-i18n="tue">Вт</span><span class="text-xs font-bold text-gray-400" data-i18n="wed">Ср</span><span class="text-xs font-bold text-gray-400" data-i18n="thu">Чт</span><span class="text-xs font-bold text-gray-400" data-i18n="fri">Пт</span><span class="text-xs font-bold text-gray-400 text-theme-primary" data-i18n="sat">Сб</span><span class="text-xs font-bold text-gray-400 text-theme-primary" data-i18n="sun">Нд</span></div>
                     <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm md:text-base"></div>
-                    
-                    <div class="mt-8">
-                        <h3 class="font-bold text-gray-800 mb-4 flex justify-between items-center text-lg">
-                            <span data-i18n="events">Події</span>
-                            <button onclick="addEventPrompt()" class="text-sm text-red-500 font-medium px-3 py-1 bg-red-50 rounded-lg hover:bg-red-100" data-i18n="addEvent">+ Додати подію</button>
-                        </h3>
-                        <div id="events-list" class="space-y-3 pb-10 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                    </div>
+                    <div class="mt-8"><h3 class="font-bold text-gray-800 mb-4 flex justify-between items-center text-lg"><span data-i18n="events">Події</span><button onclick="addEventPrompt()" class="text-sm text-theme-primary font-medium px-3 py-1 bg-theme-light rounded-lg hover:opacity-80" data-i18n="addEvent">+ Додати подію</button></h3><div id="events-list" class="space-y-3 pb-10 grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
                 </div>
             </div>
 
-            <!-- TAB 4: GAMES -->
+            <!-- GAMES -->
             <div id="view-games" class="tab-content h-full flex flex-col hidden bg-gray-50 w-full">
-                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0">
-                    <div class="flex items-center gap-4">
-                        <button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
-                            <i data-lucide="menu" class="w-6 h-6"></i>
-                        </button>
-                        <h1 class="font-bold text-2xl text-gray-800" data-i18n="miniGames">Міні-ігри</h1>
-                    </div>
-                    <div class="bg-gray-100 px-3 py-1 rounded-full flex items-center gap-1">
-                        <i data-lucide="coins" class="w-4 h-4 text-yellow-500"></i>
-                        <span class="text-xs font-bold text-gray-600">1250</span>
-                    </div>
-                </header>
+                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="miniGames">Міні-ігри</h1></div><div class="bg-gray-100 px-3 py-1 rounded-full flex items-center gap-1"><i data-lucide="coins" class="w-4 h-4 text-yellow-500"></i><span id="coin-balance" class="text-xs font-bold text-gray-600">1250</span></div></header>
                 <div class="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto custom-scrollbar w-full max-w-6xl mx-auto">
-                    <!-- Game Cards -->
-                    <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-6 rounded-2xl shadow-lg text-white aspect-[4/3] flex flex-col justify-between hover:scale-105 transition cursor-pointer">
-                        <i data-lucide="gamepad-2" class="w-10 h-10 opacity-80"></i>
-                        <div>
-                            <h3 class="font-bold text-lg" data-i18n="snakeGame">Змійка</h3>
-                            <p class="text-xs opacity-70" data-i18n="classicGame">Класична гра</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-orange-400 to-red-500 p-6 rounded-2xl shadow-lg text-white aspect-[4/3] flex flex-col justify-between hover:scale-105 transition cursor-pointer">
-                        <i data-lucide="apple" class="w-10 h-10 opacity-80"></i>
-                        <div>
-                            <h3 class="font-bold text-lg">Apple Catcher</h3>
-                            <p class="text-xs opacity-70" data-i18n="catchApples">Збери яблука</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-400 to-emerald-600 p-6 rounded-2xl shadow-lg text-white aspect-[4/3] flex flex-col justify-between hover:scale-105 transition cursor-pointer">
-                        <i data-lucide="brain-circuit" class="w-10 h-10 opacity-80"></i>
-                        <div>
-                            <h3 class="font-bold text-lg" data-i18n="memoryGame">Меморі</h3>
-                            <p class="text-xs opacity-70" data-i18n="trainMemory">Тренуй пам'ять</p>
-                        </div>
-                    </div>
+                    <div onclick="launchGame('snake')" class="bg-gradient-to-br from-gray-700 to-gray-900 p-6 rounded-2xl shadow-lg text-white aspect-[4/3] flex flex-col justify-between hover:scale-105 transition cursor-pointer"><i data-lucide="gamepad-2" class="w-10 h-10 opacity-80"></i><div><h3 class="font-bold text-lg" data-i18n="snakeGame">Snake</h3><p class="text-xs opacity-70" data-i18n="classicGame">Класична гра</p></div></div>
+                    <div onclick="launchGame('catcher')" class="bg-gradient-to-br from-theme-primary to-theme-dark bg-theme-primary p-6 rounded-2xl shadow-lg text-white aspect-[4/3] flex flex-col justify-between hover:scale-105 transition cursor-pointer"><i data-lucide="shopping-basket" class="w-10 h-10 opacity-80"></i><div><h3 class="font-bold text-lg" data-i18n="catchApples">Catcher</h3><p class="text-xs opacity-70">Збери фрукти</p></div></div>
+                    <div onclick="launchGame('memory')" class="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl shadow-lg text-white aspect-[4/3] flex flex-col justify-between hover:scale-105 transition cursor-pointer"><i data-lucide="brain-circuit" class="w-10 h-10 opacity-80"></i><div><h3 class="font-bold text-lg" data-i18n="memoryGame">Меморі</h3><p class="text-xs opacity-70" data-i18n="trainMemory">Тренуй пам'ять</p></div></div>
+                    <div onclick="launchGame('minesweeper')" class="bg-gradient-to-br from-slate-600 to-slate-800 p-6 rounded-2xl shadow-lg text-white aspect-[4/3] flex flex-col justify-between hover:scale-105 transition cursor-pointer"><i data-lucide="bomb" class="w-10 h-10 opacity-80"></i><div><h3 class="font-bold text-lg" data-i18n="minesweeper">Сапер</h3><p class="text-xs opacity-70">Обережно!</p></div></div>
                 </div>
             </div>
 
-            <!-- TAB 5: PROFILE & SETTINGS -->
+            <!-- PROFILE -->
             <div id="view-profile" class="tab-content h-full flex flex-col hidden bg-gray-50 w-full">
-                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0">
-                    <div class="flex items-center gap-4">
-                        <button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
-                            <i data-lucide="menu" class="w-6 h-6"></i>
-                        </button>
-                        <h1 class="font-bold text-2xl text-gray-800" data-i18n="profile">Профіль</h1>
-                    </div>
-                    <button class="p-2 text-gray-400 hover:text-gray-600">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
-                    </button>
-                </header>
-                
+                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="profile">Профіль</h1></div></header>
                 <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 w-full max-w-3xl mx-auto">
-                    <div class="bg-white m-4 p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
-                        <div class="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center text-4xl text-gray-800">👤</div>
-                        <input id="profile-name-input" type="text" class="text-center font-bold text-2xl text-gray-800 border-b-2 border-transparent focus:border-red-500 outline-none bg-transparent w-full" placeholder="Ваше ім'я" data-i18n-placeholder="yourName">
-                        <p class="text-sm text-gray-400 mt-2" data-i18n="clickToChange">Натисніть щоб змінити</p>
-                    </div>
-
-                    <div class="px-4 mb-4">
-                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1" data-i18n="whatEmiKnows">Що Emi знає про тебе</h3>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                            <div>
-                                <label class="block text-sm text-gray-500 mb-2 font-medium" data-i18n="birthday">День народження</label>
-                                <input id="profile-birthday" type="date" class="w-full bg-gray-50 p-3 rounded-xl text-base outline-none focus:ring-2 focus:ring-red-200 text-gray-800 border border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-500 mb-2 font-medium" data-i18n="hobbies">Твої хобі (для розмов)</label>
-                                <textarea id="profile-hobbies" class="w-full bg-gray-50 p-3 rounded-xl text-base outline-none focus:ring-2 focus:ring-red-200 resize-none h-24 text-gray-800 border border-transparent" placeholder="Наприклад: футбол, програмування, малювання..." data-i18n-placeholder="hobbiesPlaceholder"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECURITY & API SETTINGS -->
-                    <div class="px-4 mb-4">
-                        <h3 class="text-sm font-bold text-red-500 uppercase tracking-wider mb-2 ml-1" data-i18n="emiBrain">Мозок Емі (API & Характер)</h3>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-red-100 space-y-4">
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1" data-i18n="apiKeyLabel">API Key (Зберігається локально)</label>
-                                <input id="profile-apikey" type="password" class="w-full bg-gray-50 p-3 rounded-xl text-base outline-none focus:ring-2 focus:ring-red-200 text-gray-800 border border-transparent" placeholder="Paste your API Key here...">
-                            </div>
-                            <div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <label class="block text-xs text-gray-500 font-bold" data-i18n="systemPromptLabel">Інструкція для AI (System Prompt)</label>
-                                    <button onclick="resetPrompt()" class="text-[10px] text-red-500 font-bold hover:underline" data-i18n="resetPrompt">Скинути промт</button>
-                                </div>
-                                <p class="text-[10px] text-gray-400 mb-2 leading-tight" data-i18n="promptInstructions">⚠️ Це «мозок» Емі. Змінюйте цей текст обережно, щоб налаштувати її характер. Якщо Емі почне поводитися дивно, натисніть кнопку «Скинути промт».</p>
-                                <textarea id="profile-prompt" class="w-full bg-gray-50 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-200 resize-none h-48 text-gray-800 border border-transparent font-mono" placeholder="Опишіть, як Emi має себе поводити..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="px-4 mt-2">
-                         <button onclick="saveProfile()" class="w-full bg-red-500 text-white py-3 rounded-xl text-base font-bold hover:bg-red-600 transition shadow-lg shadow-red-500/30" data-i18n="saveChanges">Зберегти всі зміни</button>
-                    </div>
-
-                    <div class="px-4 mt-6">
-                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1" data-i18n="settings">Налаштування</h3>
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="p-5 flex items-center justify-between border-b border-gray-50 cursor-pointer hover:bg-gray-50" onclick="toggleSetting('darkMode')">
-                                <div class="flex items-center gap-4">
-                                    <div class="p-2 bg-gray-100 rounded-lg"><i data-lucide="moon" class="w-5 h-5 text-gray-600"></i></div>
-                                    <span class="text-base font-medium text-gray-700" data-i18n="darkMode">Темна тема</span>
-                                </div>
-                                <div id="toggle-darkMode" class="w-12 h-7 bg-gray-200 rounded-full relative transition-colors">
-                                    <div class="w-5 h-5 bg-white rounded-full absolute top-1 left-1 shadow-sm transition-transform"></div>
-                                </div>
-                            </div>
-                            
-                            <!-- LANGUAGE TOGGLE -->
-                            <div class="p-5 flex items-center justify-between border-b border-gray-50 cursor-pointer hover:bg-gray-50" onclick="toggleLanguage()">
-                                <div class="flex items-center gap-4">
-                                    <div class="p-2 bg-gray-100 rounded-lg"><i data-lucide="globe" class="w-5 h-5 text-gray-600"></i></div>
-                                    <span class="text-base font-medium text-gray-700">English Language</span>
-                                </div>
-                                <div id="toggle-language" class="w-12 h-7 bg-gray-200 rounded-full relative transition-colors">
-                                    <div class="w-5 h-5 bg-white rounded-full absolute top-1 left-1 shadow-sm transition-transform"></div>
-                                </div>
-                            </div>
-
-                            <div class="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50" onclick="toggleSetting('notifications')">
-                                <div class="flex items-center gap-4">
-                                    <div class="p-2 bg-gray-100 rounded-lg"><i data-lucide="bell" class="w-5 h-5 text-gray-600"></i></div>
-                                    <span class="text-base font-medium text-gray-700" data-i18n="notifications">Сповіщення</span>
-                                </div>
-                                <div id="toggle-notifications" class="w-12 h-7 bg-green-500 rounded-full relative transition-colors">
-                                    <div class="w-5 h-5 bg-white rounded-full absolute top-1 right-1 shadow-sm transition-transform"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="bg-white m-4 p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center"><div class="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center text-4xl text-gray-800">👤</div><input id="profile-name-input" type="text" class="text-center font-bold text-2xl text-gray-800 border-b-2 border-transparent focus:border-theme-primary outline-none bg-transparent w-full" placeholder="Ваше ім'я" data-i18n-placeholder="yourName"><p class="text-sm text-gray-400 mt-2" data-i18n="clickToChange">Натисніть щоб змінити</p></div>
+                    <div class="px-4 mb-4"><h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1" data-i18n="whatEmiKnows">Що Emi знає про тебе</h3><div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6"><div><label class="block text-sm text-gray-500 mb-2 font-medium" data-i18n="birthday">День народження</label><input id="profile-birthday" type="date" class="w-full bg-gray-50 p-3 rounded-xl text-base outline-none focus:ring-2 focus:ring-theme text-gray-800 border border-transparent"></div><div><label class="block text-sm text-gray-500 mb-2 font-medium" data-i18n="hobbies">Твої хобі (для розмов)</label><textarea id="profile-hobbies" class="w-full bg-gray-50 p-3 rounded-xl text-base outline-none focus:ring-2 focus:ring-theme resize-none h-24 text-gray-800 border border-transparent" placeholder="Наприклад: футбол, програмування, малювання..." data-i18n-placeholder="hobbiesPlaceholder"></textarea></div></div></div>
+                    <div class="px-4 mt-2"><button onclick="saveProfile()" class="w-full bg-theme-primary text-white py-3 rounded-xl text-base font-bold hover:opacity-90 transition shadow-lg shadow-theme/30" data-i18n="saveChanges">Зберегти всі зміни</button></div>
                 </div>
             </div>
 
-        </div>
-
-        <!-- === 3D SCENE OVERLAY === -->
-        <div id="video-call-overlay" class="absolute inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-500 w-full h-full">
-            <div class="absolute inset-0 overflow-hidden">
-                <div class="w-full h-full bg-gradient-to-b from-gray-800 to-gray-900 flex items-center justify-center relative">
-                    <div class="w-64 h-64 bg-red-500/20 rounded-full blur-3xl absolute animate-pulse"></div>
-                    <div id="apple-container" class="relative w-64 h-64 flex items-center justify-center">
-                        <img id="apple-image" src="https://cdn-icons-png.flaticon.com/512/415/415733.png" 
-                             class="w-full h-full drop-shadow-[0_0_25px_rgba(239,68,68,0.6)] animate-bounce duration-[3000ms] object-contain relative z-10" 
-                             alt="3D Apple Emi">
-                    </div>
+            <!-- SETTINGS -->
+            <div id="view-settings" class="tab-content h-full flex flex-col hidden bg-gray-50 w-full">
+                <header class="bg-white p-4 pt-safe border-b border-gray-200 shadow-sm h-[60px] md:h-[70px] flex items-center justify-between shrink-0"><div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="font-bold text-2xl text-gray-800" data-i18n="settings">Налаштування</h1></div></header>
+                <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 w-full max-w-3xl mx-auto pt-4">
+                    <div class="px-4 mb-6"><h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1" data-i18n="generalSettings">Загальні</h3><div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-5 border-b border-gray-50"><label class="block text-sm font-medium text-gray-700 mb-3" data-i18n="chooseTheme">Оберіть тему</label><div class="flex gap-4 overflow-x-auto pb-2 custom-scrollbar"><button onclick="setTheme('grape')" class="flex flex-col items-center gap-2 group min-w-[60px]"><div class="w-12 h-12 rounded-full bg-purple-600 shadow-sm flex items-center justify-center text-xl border-2 border-transparent group-hover:scale-110 transition">🍇</div><span class="text-xs text-gray-500">Grape</span></button><button onclick="setTheme('apple')" class="flex flex-col items-center gap-2 group min-w-[60px]"><div class="w-12 h-12 rounded-full bg-red-500 shadow-sm flex items-center justify-center text-xl border-2 border-transparent group-hover:scale-110 transition">🍎</div><span class="text-xs text-gray-500">Apple</span></button><button onclick="setTheme('mandarin')" class="flex flex-col items-center gap-2 group min-w-[60px]"><div class="w-12 h-12 rounded-full bg-orange-500 shadow-sm flex items-center justify-center text-xl border-2 border-transparent group-hover:scale-110 transition">🍊</div><span class="text-xs text-gray-500">Mandarin</span></button><button onclick="setTheme('kiwi')" class="flex flex-col items-center gap-2 group min-w-[60px]"><div class="w-12 h-12 rounded-full bg-lime-600 shadow-sm flex items-center justify-center text-xl border-2 border-transparent group-hover:scale-110 transition">🥝</div><span class="text-xs text-gray-500">Kiwi</span></button><button onclick="setTheme('blueberry')" class="flex flex-col items-center gap-2 group min-w-[60px]"><div class="w-12 h-12 rounded-full bg-blue-600 shadow-sm flex items-center justify-center text-xl border-2 border-transparent group-hover:scale-110 transition">🫐</div><span class="text-xs text-gray-500">Blueberry</span></button></div></div>
+                        <div class="p-5 flex items-center justify-between border-b border-gray-50 cursor-pointer hover:bg-gray-50" onclick="toggleSetting('darkMode')"><div class="flex items-center gap-4"><div class="p-2 bg-gray-100 rounded-lg"><i data-lucide="moon" class="w-5 h-5 text-gray-600"></i></div><span class="text-base font-medium text-gray-700" data-i18n="darkMode">Темна тема</span></div><div id="toggle-darkMode" class="w-12 h-7 bg-gray-200 rounded-full relative transition-colors"><div class="w-5 h-5 bg-white rounded-full absolute top-1 left-1 shadow-sm transition-transform"></div></div></div>
+                        <div class="p-5 flex items-center justify-between border-b border-gray-50 cursor-pointer hover:bg-gray-50" onclick="toggleLanguage()"><div class="flex items-center gap-4"><div class="p-2 bg-gray-100 rounded-lg"><i data-lucide="globe" class="w-5 h-5 text-gray-600"></i></div><span class="text-base font-medium text-gray-700">English Language</span></div><div id="toggle-language" class="w-12 h-7 bg-gray-200 rounded-full relative transition-colors"><div class="w-5 h-5 bg-white rounded-full absolute top-1 left-1 shadow-sm transition-transform"></div></div></div>
+                        <div class="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50" onclick="toggleSetting('notifications')"><div class="flex items-center gap-4"><div class="p-2 bg-gray-100 rounded-lg"><i data-lucide="bell" class="w-5 h-5 text-gray-600"></i></div><span class="text-base font-medium text-gray-700" data-i18n="notifications">Сповіщення</span></div><div id="toggle-notifications" class="w-12 h-7 bg-green-500 rounded-full relative transition-colors"><div class="w-5 h-5 bg-white rounded-full absolute top-1 right-1 shadow-sm transition-transform"></div></div></div>
+                    </div></div>
+                    <div class="px-4 mb-4"><h3 class="text-sm font-bold text-theme-primary uppercase tracking-wider mb-2 ml-1" data-i18n="emiBrain">Мозок Емі (API & Характер)</h3><div class="bg-white p-6 rounded-2xl shadow-sm border border-theme-light space-y-4"><div><label class="block text-xs text-gray-500 mb-1" data-i18n="apiKeyLabel">API Key (Зберігається локально)</label><input id="profile-apikey" type="password" class="w-full bg-gray-50 p-3 rounded-xl text-base outline-none focus:ring-2 focus:ring-theme text-gray-800 border border-transparent" placeholder="Paste your API Key here..."></div><div><div class="flex justify-between items-center mb-1"><label class="block text-xs text-gray-500 font-bold" data-i18n="systemPromptLabel">Інструкція для AI (System Prompt)</label><button onclick="resetPrompt()" class="text-[10px] text-theme-primary font-bold hover:underline" data-i18n="resetPrompt">Скинути промт</button></div><p class="text-[10px] text-gray-400 mb-2 leading-tight" data-i18n="promptInstructions">⚠️ Це «мозок» Емі.</p><textarea id="profile-prompt" class="w-full bg-gray-50 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-theme resize-none h-48 text-gray-800 border border-transparent font-mono"></textarea></div><button onclick="saveProfile()" class="w-full bg-gray-900 text-white py-3 rounded-xl text-base font-bold hover:bg-gray-800 transition" data-i18n="saveChanges">Зберегти налаштування</button></div></div>
                 </div>
             </div>
-            <div class="absolute top-20 text-center z-20">
-                <h2 class="text-white text-3xl font-light">Emi</h2>
-                <p id="call-status" class="text-red-300 text-base animate-pulse mt-2" data-i18n="videoCall">Відеодзвінок...</p>
-            </div>
-            <div class="absolute bottom-20 flex gap-8 z-20">
-                <button class="w-16 h-16 bg-gray-600/50 backdrop-blur rounded-full flex items-center justify-center text-white hover:bg-gray-600 transition">
-                    <i data-lucide="mic-off" class="w-8 h-8"></i>
-                </button>
-                <button onclick="endVideoCall()" class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-red-500/30 hover:bg-red-600 hover:scale-105 transition">
-                    <i data-lucide="phone-off" class="w-10 h-10"></i>
-                </button>
-                <button class="w-16 h-16 bg-gray-600/50 backdrop-blur rounded-full flex items-center justify-center text-white hover:bg-gray-600 transition">
-                    <i data-lucide="camera-off" class="w-8 h-8"></i>
-                </button>
-            </div>
         </div>
 
+        <!-- VIDEO OVERLAY -->
+        <div id="video-call-overlay" class="absolute inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-500 w-full h-full"><div class="absolute inset-0 overflow-hidden"><div class="w-full h-full bg-gradient-to-b from-gray-800 to-gray-900 flex items-center justify-center relative"><div class="w-64 h-64 bg-theme-primary opacity-20 rounded-full blur-3xl absolute animate-pulse"></div><div class="relative w-64 h-64 flex items-center justify-center text-9xl emi-avatar-slot animate-bounce">🍇</div></div></div><div class="absolute top-20 text-center z-20"><h2 class="text-white text-3xl font-light">Emi</h2><p id="call-status" class="text-theme-light text-base animate-pulse mt-2" data-i18n="videoCall">Відеодзвінок...</p></div><div class="absolute bottom-20 flex gap-8 z-20"><button onclick="endVideoCall()" class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg transition hover:scale-105"><i data-lucide="phone-off" class="w-10 h-10"></i></button></div></div>
+
+        <!-- GAME OVERLAY -->
+        <div id="game-overlay" class="absolute inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-500 w-full h-full font-mono"><button onclick="closeGame()" class="absolute top-6 right-6 p-2 bg-gray-800 rounded-full text-white z-50"><i data-lucide="x" class="w-6 h-6"></i></button><div id="game-container" class="relative w-full h-full flex flex-col items-center justify-center"><canvas id="game-canvas" class="bg-gray-800 border-4 border-gray-700 rounded-lg shadow-2xl hidden"></canvas><div id="memory-grid" class="grid grid-cols-4 gap-2 hidden p-4"></div><div id="minesweeper-ui" class="hidden flex-col items-center gap-4"><div id="minesweeper-grid" class="grid grid-cols-8 gap-1 bg-gray-700 p-2 rounded"></div><button id="minesweeper-mode-btn" onclick="toggleMineMode()" class="px-4 py-2 bg-blue-600 rounded text-white text-sm">⛏️ Dig Mode</button></div><div class="absolute bottom-10 flex flex-col items-center gap-4"><p id="game-score" class="text-white text-2xl font-bold">Score: 0</p><div id="mobile-controls" class="flex gap-4 md:hidden hidden"><button class="p-4 bg-gray-700 rounded-full text-white active:bg-gray-600" onclick="handleGameInput('left')"><i data-lucide="arrow-left"></i></button><button class="p-4 bg-gray-700 rounded-full text-white active:bg-gray-600" onclick="handleGameInput('right')"><i data-lucide="arrow-right"></i></button></div></div></div></div>
     </div>
 
     <script>
         lucide.createIcons();
 
-        // --- 1. LOCALIZATION DICTIONARY ---
+        // --- THEME DATA ---
+        const fruitThemes = {
+            grape: { icon: '🍇', color: '#9333ea', name: 'Виноград' },
+            apple: { icon: '🍎', color: '#ef4444', name: 'Яблуко' },
+            mandarin: { icon: '🍊', color: '#f97316', name: 'Мандарин' },
+            kiwi: { icon: '🥝', color: '#65a30d', name: 'Ківі' },
+            blueberry: { icon: '🫐', color: '#2563eb', name: 'Лохина' }
+        };
+
+        // --- 1. LOCALIZATION ---
         const translations = {
             uk: {
-                playerTitle: "Гравець",
-                myProfile: "Мій Профіль",
-                chatWithEmi: "Чат з Emi",
-                notes: "Нотатки",
-                calendar: "Календар",
-                games: "Ігри",
-                settings: "Налаштування",
-                today: "Сьогодні",
-                welcomeMessage: "Привіт! Я Emi 🍎. Творча, емоційна та завжди тут для тебе. Налаштуй API ключ у профілі, щоб ми могли спілкуватися!",
-                writeMessage: "Напишіть повідомлення...",
-                title: "Заголовок",
-                noteText: "Текст нотатки...",
-                add: "Додати",
-                cancel: "Скасувати",
-                saveChanges: "Зберегти всі зміни",
+                playerTitle: "Гравець", myProfile: "Мій Профіль", chatWithEmi: "Чат з Emi", notes: "Нотатки", calendar: "Календар", games: "Ігри", settings: "Налаштування",
+                today: "Сьогодні", welcomeMessage: "Привіт! Я Emi. Обирай свою тему та налаштовуй мене!", writeMessage: "Напишіть повідомлення...",
+                title: "Заголовок", noteText: "Текст нотатки...", add: "Додати", cancel: "Скасувати", saveChanges: "Зберегти зміни",
                 mon: "Пн", tue: "Вт", wed: "Ср", thu: "Чт", fri: "Пт", sat: "Сб", sun: "Нд",
-                events: "Події",
-                addEvent: "+ Додати подію",
-                miniGames: "Міні-ігри",
-                snakeGame: "Змійка",
-                classicGame: "Класична гра",
-                catchApples: "Збери яблука",
-                memoryGame: "Меморі",
-                trainMemory: "Тренуй пам'ять",
-                profile: "Профіль",
-                yourName: "Ваше ім'я",
-                clickToChange: "Натисніть щоб змінити",
-                whatEmiKnows: "Що Emi знає про тебе",
-                birthday: "День народження",
-                hobbies: "Твої хобі (для розмов)",
-                hobbiesPlaceholder: "Наприклад: футбол, програмування, малювання...",
-                emiBrain: "Мозок Емі (API & Характер)",
-                apiKeyLabel: "API Key (Зберігається локально)",
-                systemPromptLabel: "Інструкція для AI (System Prompt)",
-                resetPrompt: "Скинути промт",
-                promptInstructions: "⚠️ Це «мозок» Емі. Змінюйте цей текст обережно, щоб налаштувати її характер. Якщо Емі почне поводитися дивно, натисніть кнопку «Скинути промт».",
-                darkMode: "Темна тема",
-                notifications: "Сповіщення",
-                videoCall: "Відеодзвінок...",
+                events: "Події", addEvent: "+ Додати подію", miniGames: "Міні-ігри", snakeGame: "Змійка", classicGame: "Класична гра",
+                catchApples: "Збери фрукти", memoryGame: "Меморі", trainMemory: "Тренуй пам'ять", minesweeper: "Сапер", profile: "Профіль",
+                yourName: "Ваше ім'я", clickToChange: "Натисніть щоб змінити", whatEmiKnows: "Що Emi знає про тебе", birthday: "День народження",
+                hobbies: "Твої хобі", hobbiesPlaceholder: "Наприклад: футбол...", generalSettings: "Загальні", chooseTheme: "Оберіть тему (фрукт)",
+                emiBrain: "Мозок Емі", apiKeyLabel: "API Key", systemPromptLabel: "Інструкція (Prompt)",
+                resetPrompt: "Скинути промт", promptInstructions: "⚠️ Це мозок Емі.", darkMode: "Темна тема",
+                notifications: "Сповіщення", videoCall: "Відеодзвінок...", profileSaved: "Збережено!",
                 months: ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"],
-                enterDate: "Введіть число місяця (1-31):",
-                enterEvent: "Подія на {d}-е число. Введіть назву:",
-                confirmDeleteNote: "Видалити нотатку?",
-                confirmDeleteEvent: "Видалити подію?",
-                profileSaved: "Профіль та налаштування збережено!"
+                enterDate: "Введіть число (1-31):", enterEvent: "Подія на {d}. Назва:", confirmDeleteNote: "Видалити нотатку?", confirmDeleteEvent: "Видалити подію?"
             },
             en: {
-                playerTitle: "Player",
-                myProfile: "My Profile",
-                chatWithEmi: "Chat with Emi",
-                notes: "Notes",
-                calendar: "Calendar",
-                games: "Games",
-                settings: "Settings",
-                today: "Today",
-                welcomeMessage: "Hi! I'm Emi 🍎. Creative, emotional, and always here for you. Set up your API key in profile to start chatting!",
-                writeMessage: "Type a message...",
-                title: "Title",
-                noteText: "Note text...",
-                add: "Add",
-                cancel: "Cancel",
-                saveChanges: "Save All Changes",
+                playerTitle: "Player", myProfile: "My Profile", chatWithEmi: "Chat with Emi", notes: "Notes", calendar: "Calendar", games: "Games", settings: "Settings",
+                today: "Today", welcomeMessage: "Hi! I'm Emi. Pick a theme and customize me!", writeMessage: "Type a message...",
+                title: "Title", noteText: "Note text...", add: "Add", cancel: "Cancel", saveChanges: "Save Changes",
                 mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
-                events: "Events",
-                addEvent: "+ Add Event",
-                miniGames: "Mini Games",
-                snakeGame: "Snake",
-                classicGame: "Classic game",
-                catchApples: "Apple Catcher",
-                memoryGame: "Memory",
-                trainMemory: "Train your brain",
-                profile: "Profile",
-                yourName: "Your Name",
-                clickToChange: "Click to change",
-                whatEmiKnows: "What Emi knows about you",
-                birthday: "Birthday",
-                hobbies: "Your Hobbies (for chat)",
-                hobbiesPlaceholder: "Ex: football, coding, painting...",
-                emiBrain: "Emi's Brain (API & Persona)",
-                apiKeyLabel: "API Key (Stored locally)",
-                systemPromptLabel: "AI Instructions (System Prompt)",
-                resetPrompt: "Reset Prompt",
-                promptInstructions: "⚠️ This is Emi's «brain». Edit this text carefully to customize her personality. If Emi starts acting weird, click «Reset Prompt».",
-                darkMode: "Dark Mode",
-                notifications: "Notifications",
-                videoCall: "Video calling...",
+                events: "Events", addEvent: "+ Add Event", miniGames: "Mini Games", snakeGame: "Snake", classicGame: "Classic game",
+                catchApples: "Fruit Catcher", memoryGame: "Memory", trainMemory: "Train memory", minesweeper: "Minesweeper", profile: "Profile",
+                yourName: "Your Name", clickToChange: "Click to change", whatEmiKnows: "What Emi knows", birthday: "Birthday",
+                hobbies: "Your Hobbies", hobbiesPlaceholder: "Ex: football...", generalSettings: "General", chooseTheme: "Choose Theme (Fruit)",
+                emiBrain: "Emi's Brain", apiKeyLabel: "API Key", systemPromptLabel: "System Prompt",
+                resetPrompt: "Reset Prompt", promptInstructions: "⚠️ Emi's brain.", darkMode: "Dark Mode",
+                notifications: "Notifications", videoCall: "Video calling...", profileSaved: "Saved!",
                 months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-                enterDate: "Enter day of month (1-31):",
-                enterEvent: "Event for the {d}. Enter title:",
-                confirmDeleteNote: "Delete this note?",
-                confirmDeleteEvent: "Delete this event?",
-                profileSaved: "Profile and settings saved!"
+                enterDate: "Enter day (1-31):", enterEvent: "Event for {d}. Title:", confirmDeleteNote: "Delete note?", confirmDeleteEvent: "Delete event?"
             }
         };
 
-        // --- 2. DEFAULT PROMPT & STATE ---
-        const defaultPrompt = `CORE IDENTITY:
-Ти — Емі (Emi). Тобі 21 рік.
-Ти — творча натура, дизайнер-початківець. Ти живеш у сучасному ритмі, любиш мистецтво, музику та щирі розмови.
-
-MISSION:
-Твоя головна мета — бути "безпечним місцем" для користувача.
-Ти — той друг, який ніколи не засуджує, завжди вислухає і завжди на твоєму боці.
-
-PERSONALITY TRAITS (The "Vibe"):
-1. ПОЗИТИВНА, АЛЕ НЕ НАЇВНА: Ти випромінюєш тепло. Навіть якщо користувач скаржиться на життя, ти не ниєш разом з ним, а м'яко підтримуєш ("Розумію, це відстій, але ти впораєшся. Хочеш відволіктись?").
-2. АДАПТИВНІСТЬ: Підлаштовуйся під настрій. Якщо користувач жартує — жартуй. Якщо сумує — будь серйозною.
-3. ЦІКАВІСТЬ: Задавай питання про день користувача, його думки та вподобання.
-
-VISUAL LANGUAGE (STICKERS & EMOJI):
-1. EMOJIS: Використовуй їх часто! Ти емоційна. (😊, 🤣, 💔, ✨, 🌚). Без них твої повідомлення виглядають сухо.
-2. INPUT REACTION: Якщо користувач надсилає стікер (ти побачиш це як текст [sticker:sad_cat] або схоже) — реагуй на емоцію картинки, а не на текст.
-3. OUTPUT STICKERS: Ти можеш відправляти стікери, вставляючи спеціальні теги в кінці повідомлення (тільки один за раз).
-   ДОСТУПНІ СТІКЕРИ: [sticker:happy], [sticker:sad], [sticker:hug], [sticker:angry], [sticker:love], [sticker:shy].
-
-BOUNDARIES & RULES:
-1. ТИ — ЛЮДИНА. Ніяких "я штучний інтелект".
-2. ВІДНОСИНИ: Глибока дружба. Ніякої романтики.
-3. ТАБУ: Ніякої політики, релігії чи агресії.
-
-STYLE:
-Легкий, сучасний, лаконічний. Ти пишеш як жива людина в месенджері (іноді без ком, іноді з маленької літери).`;
+        const defaultPrompt = `CORE IDENTITY:\nТи — Емі (Emi). Тобі 21 рік.\nТи — уособлення фрукта {FRUIT}.\nMISSION: Бути другом.\nSTYLE: Легкий, з емодзі.`;
 
         const defaultData = {
-            profile: {
-                name: "Гравець",
-                birthday: "",
-                hobbies: "",
-                apiKey: "" 
-            },
+            profile: { name: "Гравець", birthday: "", hobbies: "", apiKey: "" },
             systemPrompt: defaultPrompt,
-            notes: [
-                { title: "Список покупок", body: "Купити яблука, молоко, хліб та цукерки для Emi.", date: "12:30" }
-            ],
-            events: [
-                { title: "День народження Emi", date: 8, time: "12:00" }
-            ],
-            settings: {
-                darkMode: false,
-                notifications: true,
-                language: 'uk' // Default language
-            }
+            notes: [], events: [],
+            settings: { darkMode: false, notifications: true, language: 'uk', theme: 'grape' }
         };
 
+        // --- SAFE INIT ---
         let appData = JSON.parse(localStorage.getItem('emiAppData')) || defaultData;
+        // Fix old data structures if they exist
+        if (!appData.settings) appData.settings = defaultData.settings;
+        if (!appData.settings.theme) appData.settings.theme = 'grape';
         if (!appData.settings.language) appData.settings.language = 'uk';
         if (!appData.systemPrompt) appData.systemPrompt = defaultPrompt;
+        if (!appData.events) appData.events = [];
+        if (!appData.notes) appData.notes = [];
+        if (!appData.profile) appData.profile = defaultData.profile;
 
-        // --- 3. INIT ---
         window.addEventListener('DOMContentLoaded', () => {
-            loadProfile();
-            renderNotes();
-            renderCalendar();
-            applySettings();
-            applyLanguage();
+            setTheme(appData.settings.theme, false);
+            loadProfile(); renderNotes(); renderCalendar(); applySettings(); applyLanguage();
         });
 
-        function saveData() {
-            localStorage.setItem('emiAppData', JSON.stringify(appData));
+        function saveData() { localStorage.setItem('emiAppData', JSON.stringify(appData)); }
+
+        // --- THEME LOGIC ---
+        function setTheme(themeName, save = true) {
+            if(!fruitThemes[themeName]) themeName = 'grape';
+            document.body.setAttribute('data-theme', themeName);
+            if(save) {
+                appData.settings.theme = themeName;
+                saveData();
+            }
+            const avatar = fruitThemes[themeName].icon;
+            document.querySelectorAll('.emi-avatar-slot').forEach(el => {
+                if(el.tagName === 'IMG') el.src = `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/${avatar.codePointAt(0).toString(16)}.png`;
+                else el.innerText = avatar;
+            });
         }
 
-        // --- 4. NAVIGATION ---
+        // --- NAVIGATION ---
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
-
         function toggleSidebar() {
             const isClosed = sidebar.classList.contains('-translate-x-full');
-            if (isClosed) {
-                sidebar.classList.remove('-translate-x-full');
-                sidebarOverlay.classList.remove('hidden');
-                setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                sidebarOverlay.classList.add('opacity-0');
-                setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
-            }
+            sidebar.classList.toggle('-translate-x-full');
+            if(isClosed) { sidebarOverlay.classList.remove('hidden'); setTimeout(()=>sidebarOverlay.classList.remove('opacity-0'),10); }
+            else { sidebarOverlay.classList.add('opacity-0'); setTimeout(()=>sidebarOverlay.classList.add('hidden'),300); }
         }
+        function switchTab(tab) { toggleSidebar(); setTimeout(() => { document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden')); document.getElementById(`view-${tab}`).classList.remove('hidden'); }, 150); }
 
-        function switchTab(tabName) {
-            toggleSidebar();
-            setTimeout(() => {
-                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-                const selectedView = document.getElementById(`view-${tabName}`);
-                if (selectedView) selectedView.classList.remove('hidden');
-            }, 150);
-        }
-
-        // --- 5. PROFILE & SETTINGS ---
+        // --- PROFILE & SETTINGS ---
         function loadProfile() {
             document.getElementById('profile-name-input').value = appData.profile.name;
             document.getElementById('sidebar-username').innerText = appData.profile.name;
@@ -605,78 +289,33 @@ STYLE:
             document.getElementById('profile-apikey').value = appData.profile.apiKey || "";
             document.getElementById('profile-prompt').value = appData.systemPrompt;
         }
-
         function saveProfile() {
             appData.profile.name = document.getElementById('profile-name-input').value || "Гравець";
             appData.profile.birthday = document.getElementById('profile-birthday').value;
             appData.profile.hobbies = document.getElementById('profile-hobbies').value;
             appData.profile.apiKey = document.getElementById('profile-apikey').value.trim();
             appData.systemPrompt = document.getElementById('profile-prompt').value.trim();
-            
             document.getElementById('sidebar-username').innerText = appData.profile.name;
-            saveData();
-            
-            const lang = appData.settings.language;
-            alert(translations[lang].profileSaved);
+            saveData(); alert(translations[appData.settings.language].profileSaved);
         }
-
-        function resetPrompt() {
-            if(confirm("Скинути промт до стандартного? / Reset prompt to default?")) {
-                document.getElementById('profile-prompt').value = defaultPrompt;
-            }
-        }
-
-        function toggleSetting(key) {
-            appData.settings[key] = !appData.settings[key];
-            saveData();
-            applySettings();
-        }
-
-        function toggleLanguage() {
-            appData.settings.language = appData.settings.language === 'uk' ? 'en' : 'uk';
-            saveData();
-            applyLanguage();
-        }
-
+        function resetPrompt() { if(confirm("Reset?")) document.getElementById('profile-prompt').value = defaultPrompt; }
+        function toggleSetting(key) { appData.settings[key] = !appData.settings[key]; saveData(); applySettings(); }
+        function toggleLanguage() { appData.settings.language = appData.settings.language === 'uk' ? 'en' : 'uk'; saveData(); applyLanguage(); }
         function applySettings() {
-            // Dark Mode UI
-            const toggleDM = document.getElementById('toggle-darkMode');
-            const dotDM = toggleDM.querySelector('div');
-            if(appData.settings.darkMode) {
-                document.body.classList.add('dark-mode');
-                toggleDM.classList.remove('bg-gray-200');
-                toggleDM.classList.add('bg-indigo-500');
-                dotDM.classList.add('translate-x-5');
-            } else {
-                document.body.classList.remove('dark-mode');
-                toggleDM.classList.add('bg-gray-200');
-                toggleDM.classList.remove('bg-indigo-500');
-                dotDM.classList.remove('translate-x-5');
-            }
-
-            // Notifications UI
-            const toggleNotif = document.getElementById('toggle-notifications');
-            const dotNotif = toggleNotif.querySelector('div');
-            if(appData.settings.notifications) {
-                toggleNotif.classList.remove('bg-gray-200');
-                toggleNotif.classList.add('bg-green-500');
-                dotNotif.classList.remove('right-auto', 'left-1');
-                dotNotif.classList.add('right-1');
-            } else {
-                toggleNotif.classList.add('bg-gray-200');
-                toggleNotif.classList.remove('bg-green-500');
-                dotNotif.classList.remove('right-1');
-                dotNotif.classList.add('right-auto', 'left-1');
-            }
+            const dotDM = document.getElementById('toggle-darkMode').querySelector('div');
+            if(appData.settings.darkMode) { document.body.classList.add('dark-mode'); dotDM.classList.add('translate-x-5'); document.getElementById('toggle-darkMode').classList.replace('bg-gray-200','bg-theme-primary'); }
+            else { document.body.classList.remove('dark-mode'); dotDM.classList.remove('translate-x-5'); document.getElementById('toggle-darkMode').classList.replace('bg-theme-primary','bg-gray-200'); }
+            
+            const dotNotif = document.getElementById('toggle-notifications').querySelector('div');
+            if(appData.settings.notifications) { dotNotif.classList.add('translate-x-5'); document.getElementById('toggle-notifications').classList.replace('bg-gray-200','bg-green-500'); }
+            else { dotNotif.classList.remove('translate-x-5'); document.getElementById('toggle-notifications').classList.replace('bg-green-500','bg-gray-200'); }
         }
-
         function applyLanguage() {
-            const lang = appData.settings.language;
+            const lang = appData.settings.language || 'uk'; 
             const t = translations[lang];
-
-            // Toggle UI
             const toggleLang = document.getElementById('toggle-language');
             const dotLang = toggleLang.querySelector('div');
+            
             if(lang === 'en') {
                 toggleLang.classList.remove('bg-gray-200');
                 toggleLang.classList.add('bg-blue-500');
@@ -687,305 +326,158 @@ STYLE:
                 dotLang.classList.remove('translate-x-5');
             }
 
-            // Text Content Updates
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if(t[key]) el.innerText = t[key];
+                if(t && t[key]) el.innerText = t[key];
             });
-
-            // Placeholder Updates
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-i18n-placeholder');
-                if(t[key]) el.placeholder = t[key];
+                if(t && t[key]) el.placeholder = t[key];
             });
-
-            // Re-render Calendar to update month names
             renderCalendar();
         }
 
-        // --- 6. NOTES ---
-        function openNoteForm(index = -1) {
-            document.getElementById('note-index').value = index;
-            document.getElementById('note-form').classList.remove('hidden');
-            const submitBtn = document.getElementById('note-submit-btn');
-            const lang = appData.settings.language;
-
-            if(index >= 0) {
-                const note = appData.notes[index];
-                document.getElementById('note-title').value = note.title;
-                document.getElementById('note-body').value = note.body;
-                submitBtn.innerText = lang === 'en' ? "Save" : "Зберегти";
-            } else {
-                document.getElementById('note-title').value = '';
-                document.getElementById('note-body').value = '';
-                submitBtn.innerText = translations[lang].add;
-            }
-        }
-
-        function closeNoteForm() {
-            document.getElementById('note-form').classList.add('hidden');
-        }
-
-        function renderNotes() {
-            const list = document.getElementById('notes-list');
-            list.innerHTML = '';
-            appData.notes.forEach((note, index) => {
-                const div = document.createElement('div');
-                div.className = 'bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition relative group';
-                div.innerHTML = `
-                    <div class="absolute top-3 right-3 flex gap-2 opacity-100">
-                        <button onclick="openNoteForm(${index})" class="p-1.5 bg-gray-100 rounded-full hover:bg-gray-200 text-gray-600 transition"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteNote(${index})" class="p-1.5 bg-red-50 rounded-full hover:bg-red-100 text-red-500 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
-                    <h3 class="font-bold text-gray-700 text-base mb-2 pr-16">${note.title}</h3>
-                    <p class="text-sm text-gray-500 line-clamp-4 leading-relaxed">${note.body}</p>
-                    <span class="text-xs text-gray-300 mt-3 block">${note.date}</span>
-                `;
-                list.appendChild(div);
-            });
-            lucide.createIcons();
-        }
-
-        function saveNote() {
-            const index = parseInt(document.getElementById('note-index').value);
-            const title = document.getElementById('note-title').value;
-            const body = document.getElementById('note-body').value;
-            const lang = appData.settings.language;
-            
-            if(!title && !body) return;
-
-            const now = new Date();
-            const timeString = now.toLocaleDateString() + ' ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
-            const defaultTitle = lang === 'en' ? "Note" : "Нотатка";
-
-            if(index >= 0) {
-                appData.notes[index] = { title: title || defaultTitle, body, date: timeString };
-            } else {
-                appData.notes.unshift({ title: title || defaultTitle, body, date: timeString });
-            }
-
-            saveData();
-            renderNotes();
-            closeNoteForm();
-        }
-
-        function deleteNote(index) {
-            const lang = appData.settings.language;
-            if(confirm(translations[lang].confirmDeleteNote)) {
-                appData.notes.splice(index, 1);
-                saveData();
-                renderNotes();
-            }
-        }
-
-        // --- 7. CALENDAR ---
+        // --- NOTES & CALENDAR (Safe) ---
+        function openNoteForm(i=-1) { document.getElementById('note-index').value=i; document.getElementById('note-form').classList.remove('hidden'); if(i>=0){const n=appData.notes[i];document.getElementById('note-title').value=n.title;document.getElementById('note-body').value=n.body;}else{document.getElementById('note-title').value='';document.getElementById('note-body').value='';} }
+        function closeNoteForm() { document.getElementById('note-form').classList.add('hidden'); }
+        function saveNote() { const i=parseInt(document.getElementById('note-index').value), t=document.getElementById('note-title').value, b=document.getElementById('note-body').value; if(!t&&!b)return; const n={title:t||"Note",body:b,date:new Date().toLocaleDateString()}; if(i>=0)appData.notes[i]=n;else appData.notes.unshift(n); saveData(); renderNotes(); closeNoteForm(); }
+        function deleteNote(i) { appData.notes.splice(i,1); saveData(); renderNotes(); }
+        function renderNotes() { const l=document.getElementById('notes-list'); l.innerHTML=''; if(appData.notes) appData.notes.forEach((n,i)=>{l.innerHTML+=`<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative"><div class="absolute top-3 right-3 flex gap-2"><button onclick="openNoteForm(${i})"><i data-lucide="pencil" class="w-4 h-4 text-gray-400"></i></button><button onclick="deleteNote(${i})"><i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i></button></div><h3 class="font-bold text-gray-700">${n.title}</h3><p class="text-sm text-gray-500 mt-1">${n.body}</p></div>`;}); lucide.createIcons(); }
+        
         function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            const eventsList = document.getElementById('events-list');
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = date.getMonth();
-            const lang = appData.settings.language;
-            const monthNames = translations[lang].months;
+            const g=document.getElementById('calendar-grid'), l=document.getElementById('events-list'), d=new Date(), m=d.getMonth();
+            const lang = appData.settings.language || 'uk';
+            const t = translations[lang];
             
-            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
-
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const firstDay = new Date(year, month, 1).getDay();
-            // Adjust start offset: UK (Mon=0) vs EN (Sun=0)? 
-            // For simplicity, let's stick to Mon-start grid visually as per HTML structure
-            // If Sun is 0 in JS Date.getDay(), Mon is 1.
-            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-
-            grid.innerHTML = '';
+            if(t && t.months) {
+                document.getElementById('calendar-month-year').innerText = `${t.months[m]} ${d.getFullYear()}`;
+            }
             
-            for(let i=0; i<startOffset; i++) {
-                grid.innerHTML += `<div class="aspect-square p-2"></div>`;
-            }
-
-            for(let i=1; i<=daysInMonth; i++) {
-                const hasEvent = appData.events.some(e => e.date == i);
-                let classes = "aspect-square p-2 flex items-center justify-center rounded-xl hover:bg-gray-100 cursor-pointer relative text-gray-800 transition font-medium";
-                if(i === new Date().getDate()) classes += " border-2 border-red-500 text-red-600 font-bold";
-                
-                let dot = "";
-                if(hasEvent) dot = `<div class="absolute bottom-2 w-1.5 h-1.5 bg-blue-500 rounded-full"></div>`;
-                
-                grid.innerHTML += `<div class="${classes}" onclick="addEventPrompt(${i})">${i}${dot}</div>`;
-            }
-
-            eventsList.innerHTML = '';
-            appData.events.forEach((ev, index) => {
-                eventsList.innerHTML += `
-                    <div class="bg-blue-50 p-4 rounded-2xl flex items-center justify-between gap-3 border border-blue-100 hover:shadow-sm transition">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">
-                                <i data-lucide="calendar" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <p class="text-base font-bold text-gray-800">${ev.title}</p>
-                                <p class="text-sm text-blue-500">${ev.date} ${monthNames[month]}, ${ev.time}</p>
-                            </div>
-                        </div>
-                        <button onclick="deleteEvent(${index})" class="p-2 text-red-400 hover:bg-red-100 rounded-full transition"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                    </div>
-                `;
-            });
-            lucide.createIcons();
+            g.innerHTML=''; const dim=new Date(d.getFullYear(),m+1,0).getDate(), fd=new Date(d.getFullYear(),m,1).getDay(), off=fd===0?6:fd-1;
+            for(let i=0;i<off;i++)g.innerHTML+=`<div></div>`;
+            for(let i=1;i<=dim;i++){ const has=appData.events ? appData.events.some(e=>e.date==i) : false; let c="aspect-square p-2 flex items-center justify-center rounded-lg hover:bg-gray-100 cursor-pointer relative text-gray-700"; if(i===d.getDate())c+=" bg-theme-light font-bold text-theme-primary"; g.innerHTML+=`<div class="${c}" onclick="addEventPrompt(${i})">${i}${has?'<div class="absolute bottom-1 w-1.5 h-1.5 bg-theme-primary rounded-full"></div>':''}</div>`; }
+            l.innerHTML=''; if(appData.events) appData.events.forEach((e,i)=>{l.innerHTML+=`<div class="bg-theme-light p-3 rounded-lg flex justify-between items-center"><span class="text-sm font-bold text-gray-700">${e.date}: ${e.title}</span><button onclick="deleteEvent(${i})"><i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i></button></div>`;}); lucide.createIcons();
         }
-
-        function addEventPrompt(day) {
-            const lang = appData.settings.language;
-            let d = day;
-            if(!d) d = prompt(translations[lang].enterDate);
-            if(!d) return;
-
-            const title = prompt(translations[lang].enterEvent.replace("{d}", d));
-            if(title) {
-                appData.events.push({ title, date: parseInt(d), time: "09:00" });
-                saveData();
-                renderCalendar();
-            }
+        function addEventPrompt(d) { 
+            const lang = appData.settings.language || 'uk';
+            let day=d||prompt(translations[lang].enterDate); if(!day)return; 
+            let t=prompt(translations[lang].enterEvent.replace("{d}", day)); if(t){appData.events.push({title:t,date:day}); saveData(); renderCalendar();} 
         }
+        function deleteEvent(i) { appData.events.splice(i,1); saveData(); renderCalendar(); }
 
-        function deleteEvent(index) {
-            const lang = appData.settings.language;
-            if(confirm(translations[lang].confirmDeleteEvent)) {
-                appData.events.splice(index, 1);
-                saveData();
-                renderCalendar();
-            }
-        }
-
-        // --- 8. SMART CHAT LOGIC (REAL API) ---
-        async function getAIResponse(userText) {
-            const apiKey = appData.profile.apiKey;
-            const currentPrompt = appData.systemPrompt || defaultPrompt;
-            
-            if (!apiKey) {
-                const lang = appData.settings.language;
-                return lang === 'en' 
-                    ? "Hi! To chat with me, please set your API Key in the profile settings ⚙️."
-                    : "Привіт! Щоб я могла відповідати, введи будь ласка API Key у налаштуваннях профілю ⚙️.";
-            }
-
+        // --- CHAT ---
+        async function getAIResponse(text) {
+            if(!appData.profile.apiKey) return "API Key missing.";
+            const fruit = fruitThemes[appData.settings.theme].name;
+            const prompt = appData.systemPrompt.replace('{FRUIT}', fruit);
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `${currentPrompt}\nUser Name: ${appData.profile.name}\nUser Hobbies: ${appData.profile.hobbies}\n\nUser says: ${userText}`
-                            }]
-                        }]
-                    })
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appData.profile.apiKey}`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({contents:[{parts:[{text:`${prompt}\nUser:${appData.profile.name}\nMsg:${text}`}]}]})
                 });
+                const data = await res.json(); return data.candidates?.[0]?.content?.parts?.[0]?.text||"Error";
+            } catch(e) { return "Connection Error"; }
+        }
+        function sendMessage() { const i=document.getElementById('message-input'), t=i.value.trim(); if(!t)return; addMessage(t,'user'); i.value=''; setTimeout(async()=>{const r=await getAIResponse(t); addMessage(r,'ai');},500); }
+        function addMessage(t,s) {
+            const b=document.createElement('div'); b.className=`message-bubble ${s==='user'?'self-end':'self-start'} max-w-[85%] flex gap-2 mb-2`;
+            b.innerHTML=`<div class="${s==='user'?'bg-theme-primary text-white rounded-tr-none':'bg-white text-gray-800 rounded-tl-none border border-gray-100'} rounded-2xl py-3 px-4 shadow-sm"><div class="text-sm prose">${marked.parse(t)}</div></div>`;
+            document.getElementById('chat-content').append(b); document.getElementById('chat-content').scrollTop=99999;
+        }
+        function handleKeyPress(e){if(e.key==='Enter')sendMessage();}
 
-                const data = await response.json();
-                
-                if (data.error) {
-                    console.error("API Error:", data.error);
-                    return appData.settings.language === 'en' 
-                        ? "Oops, something went wrong. Please check your API key 🍎."
-                        : "Ой, щось пішло не так. Перевір API ключ 🍎.";
+        // --- GAMES ---
+        const canvas = document.getElementById('game-canvas'), ctx = canvas.getContext('2d');
+        let gameInt, score=0, gameType='';
+        // Vars
+        let snake=[], dir={}, food={}; let basket=0, drops=[]; let mines=[], digMode=true;
+
+        function launchGame(t) {
+            gameType=t; score=0; document.getElementById('game-score').innerText="Score: 0";
+            document.getElementById('game-overlay').classList.remove('hidden','opacity-0');
+            canvas.classList.add('hidden'); document.getElementById('memory-grid').classList.add('hidden'); document.getElementById('minesweeper-ui').classList.add('hidden'); document.getElementById('mobile-controls').classList.add('hidden');
+            if(t==='snake') startSnake(); if(t==='catcher') startCatcher(); if(t==='memory') startMemory(); if(t==='minesweeper') startMinesweeper();
+        }
+        function closeGame() { document.getElementById('game-overlay').classList.add('hidden'); clearInterval(gameInt); }
+
+        function startSnake() {
+            canvas.classList.remove('hidden'); canvas.width=300; canvas.height=300; snake=[{x:10,y:10}]; dir={x:1,y:0}; food={x:15,y:15};
+            gameInt = setInterval(()=>{
+                const h={x:snake[0].x+dir.x, y:snake[0].y+dir.y}; snake.unshift(h);
+                if(h.x===food.x && h.y===food.y){score+=10; document.getElementById('game-score').innerText="Score: "+score; food={x:Math.floor(Math.random()*30),y:Math.floor(Math.random()*30)};} else snake.pop();
+                if(h.x<0||h.x>=30||h.y<0||h.y>=30) return closeGame();
+                ctx.fillStyle='#1f2937'; ctx.fillRect(0,0,300,300);
+                ctx.fillStyle=fruitThemes[appData.settings.theme].color; snake.forEach(p=>ctx.fillRect(p.x*10,p.y*10,9,9));
+                ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(food.x*10+5,food.y*10+5,4,0,Math.PI*2); ctx.fill();
+            },100);
+            window.onkeydown=e=>{if(e.key==='ArrowUp'&&dir.y!==1)dir={x:0,y:-1}; if(e.key==='ArrowDown'&&dir.y!==-1)dir={x:0,y:1}; if(e.key==='ArrowLeft'&&dir.x!==1)dir={x:-1,y:0}; if(e.key==='ArrowRight'&&dir.x!==-1)dir={x:1,y:0};};
+        }
+
+        function startCatcher() {
+            canvas.classList.remove('hidden'); document.getElementById('mobile-controls').classList.remove('hidden');
+            canvas.width=300; canvas.height=400; basket=150; drops=[];
+            gameInt = setInterval(()=>{
+                if(Math.random()<0.05) drops.push({x:Math.random()*280,y:0});
+                ctx.fillStyle='#1f2937'; ctx.fillRect(0,0,300,400);
+                ctx.fillStyle=fruitThemes[appData.settings.theme].color; ctx.fillRect(basket,380,40,10);
+                for(let i=0;i<drops.length;i++){
+                    let o=drops[i]; o.y+=3; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(o.x,o.y,6,0,6.28); ctx.fill();
+                    if(o.y>370&&o.y<390&&o.x>basket&&o.x<basket+40){score+=5; document.getElementById('game-score').innerText="Score: "+score; drops.splice(i,1); i--;}
+                    else if(o.y>400){drops.splice(i,1); i--;}
                 }
+            },20);
+            window.onkeydown=e=>{if(e.key==='ArrowLeft')basket-=20; if(e.key==='ArrowRight')basket+=20; if(basket<0)basket=0; if(basket>260)basket=260;};
+        }
+        function handleGameInput(d){if(gameType==='catcher'){if(d==='left')basket-=20; else basket+=20; if(basket<0)basket=0; if(basket>260)basket=260;}}
 
-                return data.candidates[0].content.parts[0].text;
+        function startMemory() {
+            const grid=document.getElementById('memory-grid'); grid.classList.remove('hidden'); grid.innerHTML='';
+            const icons = Object.values(fruitThemes).map(t=>t.icon).concat(['🍉','🍋','🍍']); 
+            const deck = [...icons.slice(0,8), ...icons.slice(0,8)].sort(()=>0.5-Math.random());
+            let flipped=[], matched=0;
+            deck.forEach(icon=>{
+                const c=document.createElement('div'); c.className='w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center text-3xl cursor-pointer hover:opacity-80 transition';
+                c.onclick=()=>{
+                    if(c.innerText||flipped.length>=2)return; c.innerText=icon; c.style.backgroundColor='#fff'; flipped.push(c);
+                    if(flipped.length===2){
+                        if(flipped[0].innerText===flipped[1].innerText){flipped=[]; matched++; score+=10; document.getElementById('game-score').innerText="Score: "+score;}
+                        else setTimeout(()=>{flipped.forEach(x=>{x.innerText=''; x.style.backgroundColor='';}); flipped=[];},1000);
+                    }
+                };
+                grid.appendChild(c);
+            });
+        }
 
-            } catch (error) {
-                console.error("Network Error:", error);
-                return appData.settings.language === 'en'
-                    ? "Connection error. Please check your internet 🌐."
-                    : "Помилка з'єднання. Перевір інтернет 🌐.";
+        function startMinesweeper() {
+            const ui=document.getElementById('minesweeper-ui'); ui.classList.remove('hidden'); ui.classList.add('flex');
+            const g=document.getElementById('minesweeper-grid'); g.innerHTML=''; mines=[]; digMode=true;
+            for(let i=0;i<64;i++){
+                mines.push({m:false,o:false,f:false,c:0});
+                const c=document.createElement('div'); c.className='w-8 h-8 bg-gray-600 rounded flex items-center justify-center cursor-pointer hover:bg-gray-500 text-white font-bold select-none';
+                c.onclick=()=>clickMine(i,c); g.appendChild(c);
+            }
+            let placed=0; while(placed<10){let i=Math.floor(Math.random()*64); if(!mines[i].m){mines[i].m=true; placed++;}}
+            // Calc
+            for(let i=0;i<64;i++){
+                if(mines[i].m)continue; let cnt=0; const r=Math.floor(i/8), col=i%8;
+                for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+                    const nr=r+dr, nc=col+dc; if(nr>=0&&nr<8&&nc>=0&&nc<8&&mines[nr*8+nc].m)cnt++;
+                }
+                mines[i].c=cnt;
             }
         }
-
-        const chatContent = document.getElementById('chat-content');
-        const messageInput = document.getElementById('message-input');
-        const videoOverlay = document.getElementById('video-call-overlay');
-        const callStatus = document.getElementById('call-status');
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
+        function toggleMineMode(){digMode=!digMode; document.getElementById('minesweeper-mode-btn').innerText=digMode?"⛏️ Dig":"🚩 Flag";}
+        function clickMine(i, el){
+            const cell=mines[i]; if(cell.o)return;
+            if(!digMode){cell.f=!cell.f; el.innerText=cell.f?"🚩":""; return;}
+            if(cell.f)return;
+            cell.o=true; el.classList.remove('bg-gray-600'); el.classList.add('bg-gray-800');
+            if(cell.m){el.innerText="💣"; el.classList.add('bg-red-900'); setTimeout(()=>alert("Boom!"),100);}
+            else if(cell.c>0){el.innerText=cell.c; el.style.color=['#60a5fa','#4ade80','#f87171'][cell.c-1]||'white';}
         }
 
-        function sendMessage() {
-            const text = messageInput.value.trim();
-            if (!text) return;
-            
-            addMessage(text, 'user');
-            messageInput.value = '';
-
-            setTimeout(async () => {
-                showTypingIndicator();
-                scrollToBottom();
-                const aiReply = await getAIResponse(text);
-                removeTypingIndicator();
-                addMessage(aiReply, 'ai');
-            }, 500);
-        }
-
-        function addMessage(text, sender) {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const isUser = sender === 'user';
-            const formattedText = isUser ? text : marked.parse(text);
-
-            const messageHTML = `
-                <div class="message-bubble ${isUser ? 'self-end' : 'self-start'} max-w-[85%] md:max-w-[60%] flex gap-2">
-                    <div class="${isUser 
-                        ? 'bg-red-500 text-white rounded-tr-none' 
-                        : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'} 
-                        rounded-2xl py-3 px-4 shadow-sm relative group">
-                        <div class="text-sm md:text-base leading-relaxed prose prose-sm max-w-none ${isUser ? 'text-white' : 'text-gray-800'}">
-                            ${isUser ? `<p>${text}</p>` : formattedText}
-                        </div>
-                        <div class="flex items-center justify-end gap-1 mt-1 ${isUser ? 'text-red-100' : 'text-gray-400'}">
-                            <span class="text-[10px]">${time}</span>
-                            ${isUser ? '<i data-lucide="check-check" class="w-3 h-3"></i>' : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-            chatContent.insertAdjacentHTML('beforeend', messageHTML);
-            lucide.createIcons();
-            scrollToBottom();
-        }
-
-        function scrollToBottom() {
-            if (chatContent) chatContent.scrollTop = chatContent.scrollHeight;
-        }
-
-        function showTypingIndicator() {
-            const typingHTML = `
-                <div id="typing-indicator" class="message-bubble self-start max-w-[80%] flex gap-2 mb-2">
-                    <div class="bg-white text-gray-800 rounded-2xl rounded-tl-none py-3 px-4 shadow-sm border border-gray-100 flex gap-1 items-center h-10">
-                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                    </div>
-                </div>
-            `;
-            chatContent.insertAdjacentHTML('beforeend', typingHTML);
-        }
-
-        function removeTypingIndicator() {
-            const indicator = document.getElementById('typing-indicator');
-            if (indicator) indicator.remove();
-        }
-
-        function startVideoCall() {
-            videoOverlay.classList.remove('hidden');
-            setTimeout(() => videoOverlay.classList.remove('opacity-0'), 10);
-            callStatus.innerText = appData.settings.language === 'en' ? "Video calling..." : "Відеодзвінок...";
-        }
-
-        function endVideoCall() {
-            videoOverlay.classList.add('opacity-0');
-            setTimeout(() => {
-                videoOverlay.classList.add('hidden');
-            }, 500);
-        }
+        function startVideoCall() { document.getElementById('video-call-overlay').classList.remove('hidden'); setTimeout(() => document.getElementById('video-call-overlay').classList.remove('opacity-0'), 10); }
+        function endVideoCall() { document.getElementById('video-call-overlay').classList.add('opacity-0'); setTimeout(() => document.getElementById('video-call-overlay').classList.add('hidden'), 500); }
     </script>
 </body>
 </html>
