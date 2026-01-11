@@ -434,7 +434,8 @@ STYLE:
             const prompt = appData.systemPrompt.replace('{FRUIT}', fruit);
             
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appData.profile.apiKey}`, {
+                // Using gemini-1.5-flash-latest to resolve the version error
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appData.profile.apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
