@@ -434,8 +434,8 @@ STYLE:
             const prompt = appData.systemPrompt.replace('{FRUIT}', fruit);
             
             try {
-                // Using gemini-1.5-flash-latest to resolve the version error
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appData.profile.apiKey}`, {
+                // Using gemini-1.5-flash which is more stable across keys
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appData.profile.apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -451,6 +451,10 @@ STYLE:
 
                 if (data.error) {
                     console.error("API Error:", data.error);
+                    // Fallback to gemini-pro if flash fails
+                    if(data.error.code === 404 || data.error.message.includes('not found')) {
+                         return await getAIResponseFallback(text, prompt);
+                    }
                     return `API Error: ${data.error.message}`;
                 }
 
@@ -465,6 +469,29 @@ STYLE:
                 return "Connection Error. Check internet or API key.";
             }
         }
+
+        async function getAIResponseFallback(text, prompt) {
+             try {
+                // Fallback to gemini-pro
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${appData.profile.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `${prompt}\n\nUser Profile: ${appData.profile.name}, ${appData.profile.hobbies}\nUser message: ${text}`
+                            }]
+                        }]
+                    })
+                });
+                const data = await res.json();
+                if (data.error) return `API Error (Fallback): ${data.error.message}`;
+                return data.candidates[0].content.parts[0].text;
+             } catch(e) {
+                 return "Connection Error (Fallback).";
+             }
+        }
+
         function sendMessage() { const i=document.getElementById('message-input'), t=i.value.trim(); if(!t)return; addMessage(t,'user'); i.value=''; setTimeout(async()=>{const r=await getAIResponse(t); addMessage(r,'ai');},500); }
         function addMessage(t,s) {
             const b=document.createElement('div'); b.className=`message-bubble ${s==='user'?'self-end':'self-start'} max-w-[85%] flex gap-2 mb-2`;
