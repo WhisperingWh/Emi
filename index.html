@@ -214,6 +214,9 @@
 
     <script>
         lucide.createIcons();
+        
+        // --- HARDCODED API KEY (Optional override) ---
+        const HARDCODED_API_KEY = ""; // Вставте свій ключ тут, якщо хочете задати його явно
 
         // --- THEME DATA ---
         const fruitThemes = {
@@ -429,13 +432,19 @@ STYLE:
 
         // --- CHAT ---
         async function getAIResponse(text) {
-            if(!appData.profile.apiKey) return "API Key missing. Please set it in Settings.";
+            let apiKey = appData.profile.apiKey;
+            if (!apiKey && typeof HARDCODED_API_KEY !== 'undefined' && HARDCODED_API_KEY) {
+                apiKey = HARDCODED_API_KEY;
+            }
+            
+            if(!apiKey) return appData.settings.language === 'en' ? "Please set API Key in Settings or in code." : "Будь ласка, введи API Key у Налаштуваннях або у коді.";
+            
             const fruit = fruitThemes[appData.settings.theme].name;
             const prompt = appData.systemPrompt.replace('{FRUIT}', fruit);
             
             try {
-                // Using gemini-1.5-flash which is more stable across keys
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appData.profile.apiKey}`, {
+                // Using gemini-1.5-flash as default, it's generally stable
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -453,7 +462,7 @@ STYLE:
                     console.error("API Error:", data.error);
                     // Fallback to gemini-pro if flash fails
                     if(data.error.code === 404 || data.error.message.includes('not found')) {
-                         return await getAIResponseFallback(text, prompt);
+                         return await getAIResponseFallback(text, prompt, apiKey);
                     }
                     return `API Error: ${data.error.message}`;
                 }
@@ -470,10 +479,10 @@ STYLE:
             }
         }
 
-        async function getAIResponseFallback(text, prompt) {
+        async function getAIResponseFallback(text, prompt, apiKey) {
              try {
                 // Fallback to gemini-pro
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${appData.profile.apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
